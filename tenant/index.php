@@ -17,6 +17,21 @@ $tenantBills = $stmtBills->fetchAll();
 $stmtComplaints = $pdo->prepare("SELECT * FROM complaints WHERE tenant_id = ? ORDER BY id DESC LIMIT 3");
 $stmtComplaints->execute([$user['id']]);
 $tenantComplaints = $stmtComplaints->fetchAll();
+
+// Fetch broadcasts for this tenant from property owner
+$tenantBroadcasts = [];
+if (!empty($activeLease)) {
+    try {
+        $stmtBc = $pdo->prepare("SELECT b.*, u.name as owner_name 
+                                 FROM broadcasts b 
+                                 JOIN properties p ON (b.property_id = p.id OR (b.property_id IS NULL AND b.owner_id = p.owner_id))
+                                 JOIN users u ON b.owner_id = u.id 
+                                 WHERE p.id = ? 
+                                 ORDER BY b.id DESC LIMIT 3");
+        $stmtBc->execute([$activeLease['property_id']]);
+        $tenantBroadcasts = $stmtBc->fetchAll();
+    } catch (Exception $e) {}
+}
 ?>
 
 <!-- ================= BAGIAN PROFIL PENYEWA (BAGIAN ATAS) ================= -->
@@ -137,6 +152,63 @@ function closeAvatarZoomModal() {
     modal.classList.add('hidden');
 }
 </script>
+
+<!-- ================= PENGUMUMAN & BROADCAST PEMILIK KOS ================= -->
+<?php if (!empty($tenantBroadcasts)): ?>
+    <div class="space-y-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-ping"></span>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white font-heading flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn text-indigo-600 dark:text-indigo-400"></i> Pengumuman Kos Terkini
+                </h3>
+            </div>
+            <span class="text-xs text-slate-500 dark:text-slate-400">Dari Pemilik Kos</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-<?= min(count($tenantBroadcasts), 2) ?> gap-4">
+            <?php foreach ($tenantBroadcasts as $b): ?>
+                <?php
+                    $badgeStyle = 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30';
+                    $typeIcon = 'fa-circle-info';
+                    $cardBorder = 'border-indigo-200 dark:border-indigo-500/30';
+                    if ($b['type'] === 'penting') {
+                        $badgeStyle = 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30';
+                        $typeIcon = 'fa-triangle-exclamation';
+                        $cardBorder = 'border-rose-200 dark:border-rose-500/30';
+                    } elseif ($b['type'] === 'peringatan') {
+                        $badgeStyle = 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30';
+                        $typeIcon = 'fa-hand';
+                        $cardBorder = 'border-amber-200 dark:border-amber-500/30';
+                    } elseif ($b['type'] === 'kegiatan') {
+                        $badgeStyle = 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30';
+                        $typeIcon = 'fa-calendar-check';
+                        $cardBorder = 'border-emerald-200 dark:border-emerald-500/30';
+                    }
+                ?>
+                <div class="glass-card rounded-2xl p-5 border <?= $cardBorder ?> bg-white dark:bg-slate-900 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border flex items-center gap-1.5 <?= $badgeStyle ?>">
+                            <i class="fa-solid <?= $typeIcon ?>"></i> <?= ucfirst($b['type']) ?>
+                        </span>
+                        <span class="text-[11px] text-slate-400">
+                            <?= date('d M Y, H:i', strtotime($b['created_at'])) ?>
+                        </span>
+                    </div>
+
+                    <h4 class="text-sm font-extrabold text-slate-900 dark:text-white font-heading mb-1"><?= htmlspecialchars($b['title']) ?></h4>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line"><?= htmlspecialchars($b['message']) ?></p>
+
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
+                        <span class="flex items-center gap-1">
+                            <i class="fa-solid fa-user-tie text-indigo-500"></i> Pengelola: <?= htmlspecialchars($b['owner_name']) ?>
+                        </span>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+<?php endif; ?>
 
 <!-- Active Room Quick Info Cards -->
 <?php if ($activeLease): ?>

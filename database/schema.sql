@@ -110,3 +110,15 @@ CREATE TABLE IF NOT EXISTS `complaints` (
     FOREIGN KEY (`tenant_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`room_id`) REFERENCES `rooms`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 8. Broadcasts Table (Pengumuman & Notifikasi Massal dari Pemilik ke Penghuni)
+CREATE TABLE IF NOT EXISTS `broadcasts` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `owner_id` INT NOT NULL,
+    `property_id` INT DEFAULT NULL,
+    `title` VARCHAR(150) NOT NULL,
+    `message` TEXT NOT NULL,
+    `type` ENUM('info', 'peringatan', 'penting', 'kegiatan') NOT NULL DEFAULT 'info',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`owner_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

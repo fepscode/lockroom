@@ -196,3 +196,47 @@ function notifyTenantComplaintResponse($complaintId, $status, $adminResponse = '
         }
     } catch (Exception $e) {}
 }
+
+/**
+ * Trigger: Broadcast announcement from Owner to all active tenants
+ */
+function sendOneSignalBroadcastToTenants($ownerId, $title, $message, $type = 'info', $propertyId = null) {
+    $pdo = getDBConnection();
+    if (!$pdo) return;
+
+    try {
+        $sql = "SELECT DISTINCT l.tenant_id 
+                FROM leases l
+                JOIN rooms r ON l.room_id = r.id
+                JOIN properties p ON r.property_id = p.id
+                WHERE p.owner_id = ? AND l.status = 'aktif'";
+        $params = [$ownerId];
+
+        if (!empty($propertyId)) {
+            $sql .= " AND p.id = ?";
+            $params[] = $propertyId;
+        }
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $tenantIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        if (!empty($tenantIds)) {
+            $typeIcons = [
+                'penting' => '🚨 PENGUMUMAN PENTING: ',
+                'peringatan' => '⚠️ PERINGATAN KOS: ',
+                'kegiatan' => '📅 INFORMASI KEGIATAN: ',
+                'info' => '📢 PENGUMUMAN KOS: '
+            ];
+            $prefix = $typeIcons[$type] ?? '📢 ';
+            $fullTitle = $prefix . $title;
+            $redirectUrl = BASE_URL . '/tenant/index.php';
+
+            sendOneSignalPush($tenantIds, $fullTitle, $message, $redirectUrl, [
+                'type' => 'broadcast',
+                'category' => $type
+            ]);
+        }
+    } catch (Exception $e) {}
+}
+
