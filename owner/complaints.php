@@ -15,6 +15,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $pdo->prepare("UPDATE complaints SET status = ?, admin_response = ? WHERE id = ?");
     $stmt->execute([$status, $response, $complaintId]);
 
+    // Send OneSignal Push Notification to Tenant
+    require_once __DIR__ . '/../helpers/onesignal.php';
+    notifyTenantComplaintResponse($complaintId, $status, $response);
+
     setFlash('success', "Status penanganan aduan berhasil diperbarui!");
     header("Location: complaints.php");
     exit;

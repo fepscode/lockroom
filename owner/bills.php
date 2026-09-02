@@ -55,6 +55,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setFlash('error', "Pembayaran tagihan ditolak. Penyewa diminta mengunggah ulang bukti transfer yang valid.");
         }
 
+        // Send OneSignal Push Notification to Tenant
+        require_once __DIR__ . '/../helpers/onesignal.php';
+        notifyTenantPaymentDecision($billId, $decision);
+
         header("Location: bills.php");
         exit;
     }

@@ -11,6 +11,11 @@ define('APP_SHORTNAME', "L n' R");
 define('APP_TAGLINE', 'Solusi Cerdas Manajemen Kos & Kontrakan');
 define('BASE_URL', '/lockroom');
 
+// OneSignal Push Notifications Configuration
+// Dapatkan App ID dan REST API Key dari https://onesignal.com/ (Gratis)
+define('ONESIGNAL_APP_ID', 'YOUR_ONESIGNAL_APP_ID'); 
+define('ONESIGNAL_REST_API_KEY', 'YOUR_ONESIGNAL_REST_API_KEY');
+
 function getDBConnection() {
     static $pdo = null;
     if ($pdo === null) {

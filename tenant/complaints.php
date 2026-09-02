@@ -25,6 +25,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $stmt = $pdo->prepare("INSERT INTO complaints (tenant_id, room_id, title, description, priority, status) VALUES (?, ?, ?, ?, ?, 'menunggu')");
     $stmt->execute([$user['id'], $roomId, $title, $description, $priority]);
+    $complaintId = $pdo->lastInsertId();
+
+    // Send OneSignal Push Notification to Owner
+    require_once __DIR__ . '/../helpers/onesignal.php';
+    notifyOwnerNewComplaint($complaintId);
 
     setFlash('success', "Laporan pengaduan fasilitas berhasil dikirimkan ke pemilik kos!");
     header("Location: complaints.php");

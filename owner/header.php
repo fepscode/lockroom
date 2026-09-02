@@ -62,10 +62,35 @@ if ($pdo) {
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
+        window.LOCKROOM_USER_ID = <?= json_encode($user['id']) ?>;
         window.LOCKROOM_USER_NAME = <?= json_encode($user['name'] ?? 'Pemilik Kos') ?>;
         window.LOCKROOM_USER_EMAIL = <?= json_encode($user['email'] ?? '') ?>;
         window.LOCKROOM_USER_ROLE = 'pemilik';
+        window.ONESIGNAL_APP_ID = <?= json_encode(defined('ONESIGNAL_APP_ID') ? ONESIGNAL_APP_ID : '') ?>;
+
+        // Initialize OneSignal Web Push
+        if (window.ONESIGNAL_APP_ID && window.ONESIGNAL_APP_ID !== 'YOUR_ONESIGNAL_APP_ID') {
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            OneSignalDeferred.push(async function(OneSignal) {
+                await OneSignal.init({
+                    appId: window.ONESIGNAL_APP_ID,
+                    allowLocalhostAsSecureOrigin: true,
+                    notifyButton: {
+                        enable: false
+                    }
+                });
+                if (window.LOCKROOM_USER_ID) {
+                    await OneSignal.login(String(window.LOCKROOM_USER_ID));
+                    await OneSignal.User.addTags({
+                        role: 'pemilik',
+                        email: window.LOCKROOM_USER_EMAIL,
+                        name: window.LOCKROOM_USER_NAME
+                    });
+                }
+            });
+        }
     </script>
     <script src="../assets/js/notifications.js"></script>
     <script src="../assets/js/app_lock.js"></script>

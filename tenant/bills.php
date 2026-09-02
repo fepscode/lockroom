@@ -49,6 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmtB = $pdo->prepare("UPDATE bills SET status = 'menunggu_verifikasi' WHERE id = ?");
     $stmtB->execute([$billId]);
 
+    // Send OneSignal Push Notification to Owner
+    require_once __DIR__ . '/../helpers/onesignal.php';
+    notifyOwnerNewPayment($billId);
+
     setFlash('success', "Bukti transfer pembayaran berhasil diunggah dan sedang menunggu verifikasi pemilik!");
     header("Location: bills.php");
     exit;
