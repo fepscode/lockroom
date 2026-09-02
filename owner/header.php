@@ -73,21 +73,31 @@ if ($pdo) {
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex selection:bg-indigo-500 selection:text-white transition-colors duration-200">
 
-    <!-- Sidebar Navigation -->
-    <aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between hidden md:flex fixed h-full z-30 shadow-sm transition-colors duration-200">
+    <!-- Mobile Backdrop -->
+    <div id="mobileSidebarBackdrop" onclick="closeMobileMenu()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 hidden transition-opacity duration-300 md:hidden"></div>
+
+    <!-- Sidebar Navigation (Desktop Fixed & Mobile Slide Drawer) -->
+    <aside id="sidebarNav" class="w-72 md:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between fixed h-full z-50 shadow-2xl md:shadow-sm transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0">
         <div>
-            <!-- Brand Logo -->
-            <div class="h-20 flex items-center px-5 border-b border-slate-200 dark:border-slate-800 gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center shadow-md shadow-indigo-600/20 flex-shrink-0">
-                    <i class="fa-solid fa-hotel text-white text-lg"></i>
-                </div>
-                <div class="min-w-0">
-                    <div class="flex items-center gap-1.5 whitespace-nowrap">
-                        <span class="text-[15px] font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">LOCK & ROOM</span>
-                        <span class="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-[10px] text-amber-600 dark:text-amber-400 font-extrabold font-mono whitespace-nowrap">L n' R</span>
+            <!-- Brand Logo & Mobile Close Button -->
+            <div class="h-20 flex items-center justify-between px-5 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center shadow-md shadow-indigo-600/20 flex-shrink-0">
+                        <i class="fa-solid fa-hotel text-white text-lg"></i>
                     </div>
-                    <div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider mt-0.5">Owner Portal</div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-1.5 whitespace-nowrap">
+                            <span class="text-[15px] font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">LOCK & ROOM</span>
+                            <span class="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-[10px] text-amber-600 dark:text-amber-400 font-extrabold font-mono whitespace-nowrap">L n' R</span>
+                        </div>
+                        <div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider mt-0.5">Owner Portal</div>
+                    </div>
                 </div>
+
+                <!-- Close Button (Mobile Only) -->
+                <button onclick="closeMobileMenu()" type="button" class="md:hidden p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Tutup Menu">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
             </div>
 
             <!-- Nav Links -->
@@ -167,12 +177,16 @@ if ($pdo) {
     <div class="flex-1 md:ml-64 flex flex-col min-h-screen">
         
         <!-- Top Navbar -->
-        <header class="h-20 bg-white/80 dark:bg-slate-900/60 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 flex items-center justify-between sticky top-0 z-20 transition-colors duration-200">
-            <div class="flex items-center gap-3">
-                <div class="text-lg font-bold text-slate-900 dark:text-white font-heading"><?= $pageTitle ?? 'Dashboard Pemilik' ?></div>
+        <header class="h-20 bg-white/80 dark:bg-slate-900/60 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20 transition-colors duration-200">
+            <div class="flex items-center gap-3 min-w-0">
+                <!-- Hamburger Menu Button (Mobile Only) -->
+                <button onclick="openMobileMenu()" type="button" class="md:hidden p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center flex-shrink-0" aria-label="Buka Menu Navigasi">
+                    <i class="fa-solid fa-bars-staggered text-base"></i>
+                </button>
+                <div class="text-base sm:text-lg font-bold text-slate-900 dark:text-white font-heading truncate"><?= $pageTitle ?? 'Dashboard Pemilik' ?></div>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 sm:gap-3">
                 <!-- Theme Switcher Button -->
                 <button onclick="toggleTheme()" type="button" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-amber-400 border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center" title="Ubah Mode Tampilan (Dark / Light)">
                     <i class="fa-solid fa-moon text-sm theme-toggle-icon"></i>
@@ -200,4 +214,4 @@ if ($pdo) {
         </header>
 
         <!-- Dynamic View Content Container -->
-        <main class="p-6 flex-1 max-w-7xl w-full mx-auto space-y-6">
+        <main class="p-4 sm:p-6 flex-1 max-w-7xl w-full mx-auto space-y-6 pb-24 md:pb-8">
