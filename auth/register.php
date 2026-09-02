@@ -76,19 +76,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isPenyewaNotice) {
                     $error = 'Alamat email ini sudah terdaftar! Silakan langsung login.';
                 } else {
                     if ($mode === 'gmail') {
-                        // INSTANT GMAIL MODE FOR PEMILIK
+                        // GMAIL REGISTRATION FOR PEMILIK WITH PASSWORD
                         $name = formatNameFromEmail($email);
                         $phone = '08' . rand(1111111111, 9999999999);
-                        $tempPassword = bin2hex(random_bytes(6));
+                        $password = $_POST['password'] ?? '';
+                        $confirmPassword = $_POST['confirm_password'] ?? '';
                         
-                        $regPayload = [
-                            'name' => $name,
-                            'email' => $email,
-                            'phone' => $phone,
-                            'password' => password_hash($tempPassword, PASSWORD_BCRYPT),
-                            'role' => 'pemilik',
-                            'mode' => 'gmail'
-                        ];
+                        if (empty($password)) {
+                            $error = 'Harap tentukan kata sandi akun Anda!';
+                        } elseif (strlen($password) < 6) {
+                            $error = 'Kata sandi minimal harus 6 karakter!';
+                        } elseif ($password !== $confirmPassword) {
+                            $error = 'Konfirmasi kata sandi tidak cocok!';
+                        } else {
+                            $regPayload = [
+                                'name' => $name,
+                                'email' => $email,
+                                'phone' => $phone,
+                                'password' => password_hash($password, PASSWORD_BCRYPT),
+                                'role' => 'pemilik',
+                                'mode' => 'gmail'
+                            ];
+                        }
                     } else {
                         // MANUAL MODE FOR PEMILIK
                         $name = sanitizeInput($_POST['name'] ?? '');
@@ -341,12 +350,34 @@ $currentOTPData = $_SESSION['pending_otp'] ?? null;
                                     </label>
                                     <div class="relative">
                                         <i class="fa-brands fa-google absolute left-4 top-1/2 -translate-y-1/2 text-rose-500"></i>
-                                        <input type="email" name="email" required placeholder="pemilik@gmail.com" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl py-3.5 pl-11 pr-4 text-slate-900 dark:text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600">
+                                        <input type="email" name="email" required placeholder="pemilik@gmail.com" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl py-3 pl-11 pr-4 text-slate-900 dark:text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600">
                                     </div>
-                                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-2 flex items-start gap-1.5">
-                                        <i class="fa-solid fa-circle-info text-amber-500 mt-0.5 flex-shrink-0"></i>
-                                        <span>Kode OTP verifikasi akan dikirim langsung ke Gmail Anda untuk aktivasi instan dashboard pemilik.</span>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                                            Kata Sandi
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-xs"></i>
+                                            <input type="password" name="password" required placeholder="Min 6 karakter" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl py-2.5 pl-9 pr-3 text-slate-900 dark:text-white text-sm focus:border-indigo-500 focus:outline-none transition-all placeholder:text-slate-400">
+                                        </div>
                                     </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                                            Ulangi Sandi
+                                        </label>
+                                        <div class="relative">
+                                            <i class="fa-solid fa-shield-check absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-xs"></i>
+                                            <input type="password" name="confirm_password" required placeholder="Ulangi sandi" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl py-2.5 pl-9 pr-3 text-slate-900 dark:text-white text-sm focus:border-indigo-500 focus:outline-none transition-all placeholder:text-slate-400">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-1.5 bg-slate-50 dark:bg-slate-950/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                                    <i class="fa-solid fa-circle-info text-amber-500 mt-0.5 flex-shrink-0"></i>
+                                    <span>Kode OTP verifikasi akan dikirim ke Gmail Anda untuk aktivasi akun bersama kata sandi yang telah Anda buat.</span>
                                 </div>
 
                                 <div class="pt-2">
