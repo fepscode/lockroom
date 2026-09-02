@@ -6,6 +6,7 @@ vendor/
 .env
 .env.local
 *.log
+config/config.local.php
 
 # Operating System files
 Thumbs.db

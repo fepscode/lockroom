@@ -48,11 +48,15 @@ function sendOneSignalPush($targetUserIds, $title, $message, $url = '', $additio
         $fields['url'] = $url;
     }
 
+    $authHeader = str_starts_with(ONESIGNAL_REST_API_KEY, 'os_v2_') 
+        ? 'Key ' . ONESIGNAL_REST_API_KEY 
+        : 'Basic ' . ONESIGNAL_REST_API_KEY;
+
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, "https://onesignal.com/api/v1/notifications");
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json; charset=utf-8',
-        'Authorization: Basic ' . ONESIGNAL_REST_API_KEY
+        'Authorization: ' . $authHeader
     ]);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt($ch, CURLOPT_HEADER, FALSE);
