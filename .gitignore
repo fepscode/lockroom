@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Environment and sensitive data
+.env
+.env.local
+*.log
+
+# Operating System files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# IDE and Editor configurations
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Temporary / Cache files
+*.tmp
+*.bak
+*.swp
+
+# Mobile build files (if Android/iOS Capacitor added)
+android/app/build/
+android/.gradle/
+android/local.properties
+ios/App/Pods/
+ios/App/build/

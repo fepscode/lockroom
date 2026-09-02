@@ -1,0 +1,203 @@
+<?php
+// Owner Layout Header
+// LOCK & ROOM (L n' R)
+
+require_once __DIR__ . '/../helpers/auth.php';
+requireLogin('pemilik');
+
+$user = currentUser();
+$pdo = getDBConnection();
+$currentPage = basename($_SERVER['PHP_SELF']);
+
+// Count unverified payments and pending complaints
+$unverifiedCount = 0;
+$pendingComplaintsCount = 0;
+
+if ($pdo) {
+    try {
+        $unverifiedCount = $pdo->query("SELECT COUNT(*) FROM bills WHERE status = 'menunggu_verifikasi'")->fetchColumn();
+        $pendingComplaintsCount = $pdo->query("SELECT COUNT(*) FROM complaints WHERE status = 'menunggu'")->fetchColumn();
+
+        // Owner Avatar
+        $stmtOwnerAvatar = $pdo->prepare("SELECT avatar FROM users WHERE id = ? LIMIT 1");
+        $stmtOwnerAvatar->execute([$user['id']]);
+        $userAvatar = getUserAvatar($stmtOwnerAvatar->fetchColumn() ?: null, $user['name']);
+    } catch (Exception $e) {}
+}
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $pageTitle ?? 'Dashboard Pemilik' ?> - LOCK & ROOM (L n' R)</title>
+    
+    <!-- Theme Switcher Init (Prevents Flash) -->
+    <script src="../assets/js/theme.js"></script>
+
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            amber: '#f59e0b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        window.LOCKROOM_USER_NAME = <?= json_encode($user['name'] ?? 'Pemilik Kos') ?>;
+        window.LOCKROOM_USER_EMAIL = <?= json_encode($user['email'] ?? '') ?>;
+        window.LOCKROOM_USER_ROLE = 'pemilik';
+    </script>
+    <script src="../assets/js/notifications.js"></script>
+    <script src="../assets/js/app_lock.js"></script>
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex selection:bg-indigo-500 selection:text-white transition-colors duration-200">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between hidden md:flex fixed h-full z-30 shadow-sm transition-colors duration-200">
+        <div>
+            <!-- Brand Logo -->
+            <div class="h-20 flex items-center px-5 border-b border-slate-200 dark:border-slate-800 gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center shadow-md shadow-indigo-600/20 flex-shrink-0">
+                    <i class="fa-solid fa-hotel text-white text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5 whitespace-nowrap">
+                        <span class="text-[15px] font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">LOCK & ROOM</span>
+                        <span class="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-[10px] text-amber-600 dark:text-amber-400 font-extrabold font-mono whitespace-nowrap">L n' R</span>
+                    </div>
+                    <div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider mt-0.5">Owner Portal</div>
+                </div>
+            </div>
+
+            <!-- Nav Links -->
+            <nav class="p-4 space-y-1.5 text-sm font-medium">
+                <a href="index.php" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all <?= $currentPage === 'index.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">
+                    <i class="fa-solid fa-gauge-high w-5 text-center"></i>
+                    <span>Ringkasan</span>
+                </a>
+
+                <a href="rooms.php" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all <?= $currentPage === 'rooms.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">
+                    <i class="fa-solid fa-city w-5 text-center"></i>
+                    <span>Kelola Rumah & Kamar</span>
+                </a>
+
+                <a href="tenants.php" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all <?= $currentPage === 'tenants.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">
+                    <i class="fa-solid fa-users w-5 text-center"></i>
+                    <span>Data Penyewa</span>
+                </a>
+
+                <a href="bills.php" class="flex items-center justify-between px-4 py-3 rounded-xl transition-all <?= $currentPage === 'bills.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-receipt w-5 text-center"></i>
+                        <span>Tagihan & Verifikasi</span>
+                    </div>
+                    <?php if ($unverifiedCount > 0): ?>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500 text-slate-950"><?= $unverifiedCount ?></span>
+                    <?php endif; ?>
+                </a>
+
+                <a href="complaints.php" class="flex items-center justify-between px-4 py-3 rounded-xl transition-all <?= $currentPage === 'complaints.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-screwdriver-wrench w-5 text-center"></i>
+                        <span>Pengaduan Fasilitas</span>
+                    </div>
+                    <?php if ($pendingComplaintsCount > 0): ?>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500 text-white"><?= $pendingComplaintsCount ?></span>
+                    <?php endif; ?>
+                </a>
+
+                <a href="profile.php" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all <?= $currentPage === 'profile.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">
+                    <i class="fa-solid fa-user-gear w-5 text-center"></i>
+                    <span>Profil Saya</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- User Profile & Logout Bottom -->
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+            <div class="p-3 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <a href="profile.php" class="flex items-center gap-3 overflow-hidden group flex-1">
+                    <div class="w-9 h-9 rounded-xl overflow-hidden border border-indigo-300 dark:border-indigo-500/40 flex-shrink-0 shadow-sm">
+                        <img src="<?= htmlspecialchars($userAvatar ?? 'https://ui-avatars.com/api/?name=Pemilik') ?>" alt="<?= htmlspecialchars($user['name']) ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
+                    </div>
+                    <div class="truncate">
+                        <div class="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 transition-colors"><?= htmlspecialchars(formatTitleCase($user['name'])) ?></div>
+                        <div class="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold">Pemilik Kos</div>
+                    </div>
+                </a>
+                <div class="flex items-center gap-1">
+                    <button onclick="lockAppNow()" type="button" class="p-2 text-slate-400 hover:text-amber-500 transition-colors" title="Kunci Aplikasi">
+                        <i class="fa-solid fa-lock"></i>
+                    </button>
+                    <a href="../auth/logout.php" class="p-2 text-slate-400 hover:text-rose-500 transition-colors" title="Keluar">
+                        <i class="fa-solid fa-power-off"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="mt-2 text-center">
+                <a href="../index.php" class="text-[11px] text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-amber-400 transition-colors flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-globe"></i> Lihat Website Publik
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Wrapper Content -->
+    <div class="flex-1 md:ml-64 flex flex-col min-h-screen">
+        
+        <!-- Top Navbar -->
+        <header class="h-20 bg-white/80 dark:bg-slate-900/60 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 flex items-center justify-between sticky top-0 z-20 transition-colors duration-200">
+            <div class="flex items-center gap-3">
+                <div class="text-lg font-bold text-slate-900 dark:text-white font-heading"><?= $pageTitle ?? 'Dashboard Pemilik' ?></div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- Theme Switcher Button -->
+                <button onclick="toggleTheme()" type="button" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-amber-400 border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center" title="Ubah Mode Tampilan (Dark / Light)">
+                    <i class="fa-solid fa-moon text-sm theme-toggle-icon"></i>
+                </button>
+
+                <!-- Lock App Button -->
+                <button onclick="lockAppNow()" type="button" class="p-2.5 rounded-xl bg-slate-100 hover:bg-amber-50 dark:hover:bg-amber-500/20 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-1.5 text-xs font-bold" title="Kunci Aplikasi Sekarang">
+                    <i class="fa-solid fa-lock text-amber-500"></i>
+                    <span class="hidden sm:inline">Kunci</span>
+                </button>
+
+                <a href="bills.php" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 relative transition-all border border-slate-200 dark:border-slate-700" title="Verifikasi Pembayaran">
+                    <i class="fa-solid fa-bell"></i>
+                    <?php if ($unverifiedCount > 0): ?>
+                        <span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-extrabold flex items-center justify-center animate-pulse">
+                            <?= $unverifiedCount ?>
+                        </span>
+                    <?php endif; ?>
+                </a>
+
+                <a href="../index.php" target="_blank" class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-all">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Preview Website
+                </a>
+            </div>
+        </header>
+
+        <!-- Dynamic View Content Container -->
+        <main class="p-6 flex-1 max-w-7xl w-full mx-auto space-y-6">

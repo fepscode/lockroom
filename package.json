@@ -1,0 +1,37 @@
+{
+  "name": "lockroom-mobile",
+  "version": "1.0.0",
+  "description": "LOCK & ROOM (L n' R) - Mobile Application for Android & iOS",
+  "main": "index.php",
+  "scripts": {
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "build:apk": "cd android && ./gradlew assembleDebug"
+  },
+  "keywords": [
+    "lockroom",
+    "boarding-house",
+    "kos",
+    "kontrakan",
+    "capacitor",
+    "android",
+    "ios"
+  ],
+  "author": "LOCK & ROOM Dev Team",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/haptics": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor/keyboard": "^6.0.0",
+    "@capacitor/push-notifications": "^6.0.0",
+    "@capacitor/splash-screen": "^6.0.0",
+    "@capacitor/status-bar": "^6.0.0"
+  }
+}
