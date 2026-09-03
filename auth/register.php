@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isPenyewaNotice) {
 
             if ($pdo) {
                 try {
-                    $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, 'pemilik')");
+                    $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, subscription_status, trial_ends_at, subscription_plan) VALUES (?, ?, ?, ?, 'pemilik', 'trial', DATE_ADD(NOW(), INTERVAL 14 DAY), 'Free Trial 14 Hari')");
                     $stmt->execute([$data['name'], $data['email'], $data['phone'], $data['password']]);
                     $newUserId = $pdo->lastInsertId();
 

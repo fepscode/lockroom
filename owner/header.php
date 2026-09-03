@@ -3,6 +3,7 @@
 // LOCK & ROOM (L n' R)
 
 require_once __DIR__ . '/../helpers/auth.php';
+require_once __DIR__ . '/../helpers/subscription.php';
 requireLogin('pemilik');
 
 $user = currentUser();
@@ -12,11 +13,20 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 // Count unverified payments and pending complaints
 $unverifiedCount = 0;
 $pendingComplaintsCount = 0;
+$pendingSubCount = 0;
+$subInfo = [
+    'status' => 'trial',
+    'is_active' => true,
+    'days_remaining' => 14,
+    'plan_name' => 'Free Trial 14 Hari'
+];
 
 if ($pdo) {
     try {
         $unverifiedCount = $pdo->query("SELECT COUNT(*) FROM bills WHERE status = 'menunggu_verifikasi'")->fetchColumn();
         $pendingComplaintsCount = $pdo->query("SELECT COUNT(*) FROM complaints WHERE status = 'menunggu'")->fetchColumn();
+        $pendingSubCount = $pdo->query("SELECT COUNT(*) FROM subscription_orders WHERE status = 'menunggu_konfirmasi'")->fetchColumn();
+        $subInfo = getOwnerSubscriptionInfo($user['id']);
 
         // Owner Avatar
         $stmtOwnerAvatar = $pdo->prepare("SELECT avatar FROM users WHERE id = ? LIMIT 1");
@@ -24,6 +34,7 @@ if ($pdo) {
         $userAvatar = getUserAvatar($stmtOwnerAvatar->fetchColumn() ?: null, $user['name']);
     } catch (Exception $e) {}
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -167,6 +178,30 @@ if ($pdo) {
                     <span>Broadcast Penghuni</span>
                 </a>
 
+                <a href="subscription.php" class="flex items-center justify-between px-4 py-3 rounded-xl transition-all <?= $currentPage === 'subscription.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-gem w-5 text-center"></i>
+                        <span>Paket Langganan</span>
+                    </div>
+                    <?php if ($subInfo['status'] === 'active'): ?>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-500 text-white">Aktif</span>
+                    <?php elseif ($subInfo['status'] === 'trial'): ?>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-500 text-white"><?= $subInfo['days_remaining'] ?>h Trial</span>
+                    <?php else: ?>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-500 text-white animate-pulse">Habis</span>
+                    <?php endif; ?>
+                </a>
+
+                <a href="admin_subscriptions.php" class="flex items-center justify-between px-4 py-3 rounded-xl transition-all <?= $currentPage === 'admin_subscriptions.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-shield-halved w-5 text-center"></i>
+                        <span>Admin &amp; QRIS</span>
+                    </div>
+                    <?php if ($pendingSubCount > 0): ?>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500 text-white animate-pulse"><?= $pendingSubCount ?></span>
+                    <?php endif; ?>
+                </a>
+
                 <a href="profile.php" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all <?= $currentPage === 'profile.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">
                     <i class="fa-solid fa-user-gear w-5 text-center"></i>
                     <span>Profil Saya</span>
@@ -245,3 +280,44 @@ if ($pdo) {
 
         <!-- Dynamic View Content Container -->
         <main class="p-4 sm:p-6 flex-1 max-w-7xl w-full mx-auto space-y-6 pb-24 md:pb-8">
+
+        <!-- Banner Status Trial & Langganan Pemilik -->
+        <?php if ($subInfo['status'] === 'trial' && $currentPage !== 'subscription.php'): ?>
+            <div class="p-3.5 sm:p-4 rounded-2xl <?= $subInfo['days_remaining'] <= 3 ? 'bg-amber-500 text-slate-950 shadow-amber-500/20' : 'bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white shadow-indigo-900/20' ?> shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 border <?= $subInfo['days_remaining'] <= 3 ? 'border-amber-400' : 'border-indigo-700/50' ?>">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl <?= $subInfo['days_remaining'] <= 3 ? 'bg-slate-950 text-amber-400' : 'bg-white/10 text-amber-400' ?> flex items-center justify-center text-sm flex-shrink-0">
+                        <i class="fa-solid fa-clock-rotate-left animate-spin-slow"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold leading-tight">
+                            Masa Uji Coba Gratis (Trial 14 Hari)
+                        </div>
+                        <div class="text-[11px] <?= $subInfo['days_remaining'] <= 3 ? 'text-slate-900 font-semibold' : 'text-slate-300' ?> mt-0.5">
+                            Tersisa <strong><?= $subInfo['days_remaining'] ?> hari lagi</strong> (berakhir pada <?= formatDateIndo($subInfo['ends_at']) ?>).
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <a href="subscription.php" class="px-3.5 py-1.5 rounded-xl <?= $subInfo['days_remaining'] <= 3 ? 'bg-slate-950 text-white hover:bg-slate-900' : 'bg-white text-indigo-900 hover:bg-slate-100' ?> text-xs font-extrabold shadow-sm transition-all flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-qrcode text-amber-500"></i> Upgrade Paket Sekarang
+                    </a>
+                </div>
+            </div>
+        <?php elseif ($subInfo['status'] === 'expired' && $currentPage !== 'subscription.php' && $currentPage !== 'admin_subscriptions.php'): ?>
+            <div class="p-4 rounded-2xl bg-rose-600 text-white shadow-lg shadow-rose-600/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-rose-500 animate-pulse">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center text-base flex-shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold">Masa Uji Coba Anda Telah Berakhir</div>
+                        <div class="text-[11px] text-rose-100 mt-0.5">Silakan pilih paket langganan untuk terus mengelola kamar, tagihan, dan pengumuman kos.</div>
+                    </div>
+                </div>
+                <a href="subscription.php" class="px-4 py-2 rounded-xl bg-white text-rose-600 hover:bg-slate-100 text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-gem"></i> Aktifkan Langganan
+                </a>
+            </div>
+        <?php endif; ?>
+
