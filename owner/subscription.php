@@ -258,7 +258,15 @@ $orders = $stmtOrders->fetchAll();
                 </div>
                 
                 <div class="w-64 h-80 mx-auto rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-700 shadow-md bg-white p-2">
-                    <img src="../<?= htmlspecialchars($qrisImage) ?>" alt="QRIS Merchant GoPay" class="w-full h-full object-contain">
+                    <img id="qrisDisplayImage" src="../<?= htmlspecialchars($qrisImage) ?>" alt="QRIS Merchant GoPay" class="w-full h-full object-contain">
+                </div>
+
+                <!-- Tombol Download QRIS untuk Bayar dari Galeri HP -->
+                <div class="flex items-center justify-center gap-2 pt-0.5">
+                    <a href="../<?= htmlspecialchars($qrisImage) ?>" download="QRIS_Pembayaran_LockRoom" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition-all shadow-sm">
+                        <i class="fa-solid fa-download text-indigo-500"></i>
+                        <span>Download QRIS (Bayar dari Galeri)</span>
+                    </a>
                 </div>
 
                 <div class="text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
