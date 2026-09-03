@@ -1,11 +1,19 @@
         </main>
 
         <!-- Footer Desktop -->
-        <footer class="p-6 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500 hidden md:block">
-            <div>&copy; <?= date('Y') ?> <strong>LOCK & ROOM (L n' R)</strong> — Panel Pengelolaan Pemilik Kos & Kontrakan.</div>
-            <div class="mt-1 text-[11px]">
-                Powered by <a href="https://fepscode.my.id" target="_blank" rel="noopener noreferrer" class="font-extrabold text-indigo-600 dark:text-cyan-400 hover:underline">FeCo</a>
+        <footer class="p-6 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500 hidden md:block space-y-3">
+            <div>
+                <a href="https://fepscode.my.id" target="_blank" rel="noopener noreferrer" class="group relative inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:via-purple-500/20 hover:to-pink-500/20 border border-indigo-500/30 hover:border-indigo-500/60 shadow-sm shadow-indigo-500/10 hover:shadow-indigo-500/25 transition-all duration-300 transform hover:-translate-y-0.5">
+                    <span class="relative flex h-1.5 w-1.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-500"></span>
+                    </span>
+                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-widest uppercase">POWERED BY</span>
+                    <strong class="font-black text-xs tracking-wider bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400 bg-clip-text text-transparent">FECO</strong>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-indigo-500 dark:text-cyan-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                </a>
             </div>
+            <div>&copy; <?= date('Y') ?> <strong>LOCK & ROOM (L n' R)</strong> — Panel Pengelolaan Pemilik Kos & Kontrakan.</div>
         </footer>
     </div>
 
