@@ -6,11 +6,14 @@ require_once __DIR__ . '/../helpers/auth.php';
 require_once __DIR__ . '/../helpers/subscription.php';
 requireLogin('pemilik');
 
+if (!isSuperAdmin()) {
+    setFlash('error', 'Akses ditolak! Halaman ini hanya untuk Pemilik Aplikasi (Super Admin).');
+    header("Location: index.php");
+    exit;
+}
+
 $user = currentUser();
 $pdo = getDBConnection();
-
-// Check if user is platform admin (for demo, owner id 1 is considered admin, or any owner can manage their platform)
-$isPlatformAdmin = true; 
 
 // Handle Actions: Approve Order, Reject Order, Update QRIS Settings
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

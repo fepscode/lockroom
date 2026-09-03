@@ -28,6 +28,10 @@ function currentUser() {
     ];
 }
 
+function isSuperAdmin() {
+    return (isLoggedIn() && isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'superadmin');
+}
+
 function requireLogin($requiredRole = null) {
     if (!isLoggedIn()) {
         $_SESSION['flash_error'] = 'Silakan login terlebih dahulu untuk mengakses halaman tersebut.';
@@ -36,14 +40,23 @@ function requireLogin($requiredRole = null) {
         exit;
     }
 
-    if ($requiredRole && $_SESSION['user_role'] !== $requiredRole) {
-        $_SESSION['flash_error'] = 'Anda tidak memiliki hak akses untuk membuka halaman tersebut.';
-        if ($_SESSION['user_role'] === 'pemilik') {
-            header("Location: " . BASE_URL . "/owner/index.php");
-        } else {
-            header("Location: " . BASE_URL . "/tenant/index.php");
+    if ($requiredRole) {
+        $userRole = $_SESSION['user_role'] ?? '';
+        
+        // Superadmin has access to both 'pemilik' and 'superadmin' areas
+        if ($requiredRole === 'pemilik' && ($userRole === 'pemilik' || $userRole === 'superadmin')) {
+            return;
         }
-        exit;
+
+        if ($userRole !== $requiredRole) {
+            $_SESSION['flash_error'] = 'Anda tidak memiliki hak akses untuk membuka halaman tersebut.';
+            if ($userRole === 'pemilik' || $userRole === 'superadmin') {
+                header("Location: " . BASE_URL . "/owner/index.php");
+            } else {
+                header("Location: " . BASE_URL . "/tenant/index.php");
+            }
+            exit;
+        }
     }
 }
 

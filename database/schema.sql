@@ -9,11 +9,16 @@ CREATE TABLE IF NOT EXISTS `users` (
     `email` VARCHAR(100) NOT NULL UNIQUE,
     `phone` VARCHAR(25) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
-    `role` ENUM('pemilik', 'penyewa') NOT NULL DEFAULT 'penyewa',
+    `role` ENUM('superadmin', 'pemilik', 'penyewa') NOT NULL DEFAULT 'penyewa',
+    `subscription_status` ENUM('trial', 'active', 'expired') NOT NULL DEFAULT 'trial',
+    `trial_ends_at` DATETIME NULL,
+    `subscription_ends_at` DATETIME NULL,
+    `subscription_plan` VARCHAR(50) DEFAULT 'Free Trial 14 Hari',
     `avatar` VARCHAR(255) DEFAULT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 -- 2. Properties Table (Kos / Kontrakan milik Owner)
 CREATE TABLE IF NOT EXISTS `properties` (
@@ -122,3 +127,30 @@ CREATE TABLE IF NOT EXISTS `broadcasts` (
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`owner_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 9. Subscription Orders Table (Pesanan Langganan Pemilik Kos via QRIS)
+CREATE TABLE IF NOT EXISTS `subscription_orders` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `owner_id` INT NOT NULL,
+    `order_code` VARCHAR(50) NOT NULL UNIQUE,
+    `plan_name` VARCHAR(100) NOT NULL,
+    `duration_days` INT NOT NULL,
+    `amount` DECIMAL(12, 2) NOT NULL,
+    `payment_method` VARCHAR(50) NOT NULL DEFAULT 'QRIS GoPay',
+    `proof_image` VARCHAR(255) DEFAULT NULL,
+    `notes` TEXT DEFAULT NULL,
+    `status` ENUM('menunggu_konfirmasi', 'disetujui', 'ditolak') NOT NULL DEFAULT 'menunggu_konfirmasi',
+    `admin_notes` TEXT DEFAULT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `verified_at` DATETIME DEFAULT NULL,
+    `verified_by` INT DEFAULT NULL,
+    FOREIGN KEY (`owner_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 10. System Settings Table (Konfigurasi QRIS Merchant & Pengaturan Global)
+CREATE TABLE IF NOT EXISTS `system_settings` (
+    `setting_key` VARCHAR(100) PRIMARY KEY,
+    `setting_value` TEXT NULL,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+

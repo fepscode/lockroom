@@ -192,15 +192,17 @@ if ($pdo) {
                     <?php endif; ?>
                 </a>
 
-                <a href="admin_subscriptions.php" class="flex items-center justify-between px-4 py-3 rounded-xl transition-all <?= $currentPage === 'admin_subscriptions.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-shield-halved w-5 text-center"></i>
-                        <span>Admin &amp; QRIS</span>
-                    </div>
-                    <?php if ($pendingSubCount > 0): ?>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500 text-white animate-pulse"><?= $pendingSubCount ?></span>
-                    <?php endif; ?>
-                </a>
+                <?php if (isSuperAdmin()): ?>
+                    <a href="admin_subscriptions.php" class="flex items-center justify-between px-4 py-3 rounded-xl transition-all <?= $currentPage === 'admin_subscriptions.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-shield-halved w-5 text-center text-amber-500"></i>
+                            <span>Admin &amp; QRIS</span>
+                        </div>
+                        <?php if ($pendingSubCount > 0): ?>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500 text-slate-950 animate-pulse"><?= $pendingSubCount ?></span>
+                        <?php endif; ?>
+                    </a>
+                <?php endif; ?>
 
                 <a href="profile.php" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all <?= $currentPage === 'profile.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">
                     <i class="fa-solid fa-user-gear w-5 text-center"></i>
@@ -218,9 +220,12 @@ if ($pdo) {
                     </div>
                     <div class="truncate">
                         <div class="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 transition-colors"><?= htmlspecialchars(formatTitleCase($user['name'])) ?></div>
-                        <div class="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold">Pemilik Kos</div>
+                        <div class="text-[11px] <?= isSuperAdmin() ? 'text-amber-600 dark:text-amber-400 font-extrabold flex items-center gap-1' : 'text-indigo-600 dark:text-indigo-400 font-semibold' ?>">
+                            <?= isSuperAdmin() ? '<i class="fa-solid fa-crown text-[10px]"></i> Super Admin' : 'Pemilik Kos' ?>
+                        </div>
                     </div>
                 </a>
+
                 <div class="flex items-center gap-1">
                     <button onclick="lockAppNow()" type="button" class="p-2 text-slate-400 hover:text-amber-500 transition-colors" title="Kunci Aplikasi">
                         <i class="fa-solid fa-lock"></i>
@@ -282,7 +287,7 @@ if ($pdo) {
         <main class="p-4 sm:p-6 flex-1 max-w-7xl w-full mx-auto space-y-6 pb-24 md:pb-8">
 
         <!-- Banner Status Trial & Langganan Pemilik -->
-        <?php if ($subInfo['status'] === 'trial' && $currentPage !== 'subscription.php'): ?>
+        <?php if (!isSuperAdmin() && $subInfo['status'] === 'trial' && $currentPage !== 'subscription.php'): ?>
             <div class="p-3.5 sm:p-4 rounded-2xl <?= $subInfo['days_remaining'] <= 3 ? 'bg-amber-500 text-slate-950 shadow-amber-500/20' : 'bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white shadow-indigo-900/20' ?> shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 border <?= $subInfo['days_remaining'] <= 3 ? 'border-amber-400' : 'border-indigo-700/50' ?>">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl <?= $subInfo['days_remaining'] <= 3 ? 'bg-slate-950 text-amber-400' : 'bg-white/10 text-amber-400' ?> flex items-center justify-center text-sm flex-shrink-0">
@@ -304,7 +309,7 @@ if ($pdo) {
                     </a>
                 </div>
             </div>
-        <?php elseif ($subInfo['status'] === 'expired' && $currentPage !== 'subscription.php' && $currentPage !== 'admin_subscriptions.php'): ?>
+        <?php elseif (!isSuperAdmin() && $subInfo['status'] === 'expired' && $currentPage !== 'subscription.php' && $currentPage !== 'admin_subscriptions.php'): ?>
             <div class="p-4 rounded-2xl bg-rose-600 text-white shadow-lg shadow-rose-600/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-rose-500 animate-pulse">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center text-base flex-shrink-0">
