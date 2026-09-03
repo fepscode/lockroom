@@ -3,6 +3,25 @@
 // LOCK & ROOM (L n' R)
 
 if (session_status() === PHP_SESSION_NONE) {
+    // Session Security & Cookie Hardening Flags
+    ini_set('session.use_only_cookies', 1);
+    ini_set('session.use_trans_sid', 0);
+    ini_set('session.cookie_httponly', 1);
+
+    // Auto-detect HTTPS
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+    session_set_cookie_params([
+        'lifetime' => 86400 * 7, // 7 days session
+        'path' => '/',
+        'domain' => '',
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+
     session_start();
 }
 
@@ -11,6 +30,7 @@ if (!ob_get_level()) {
 }
 
 require_once __DIR__ . '/../config/database.php';
+
 
 function isLoggedIn() {
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
@@ -182,3 +202,94 @@ function getUserAvatar($avatarPath = null, $userName = 'User') {
     $initials = urlencode($userName);
     return "https://ui-avatars.com/api/?name={$initials}&background=4f46e5&color=fff&size=256&bold=true";
 }
+
+/**
+ * Get Client Real IP Address
+ */
+function getClientIP() {
+    if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+        return $_SERVER['HTTP_CF_CONNECTING_IP'];
+    }
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        return trim($ips[0]);
+    }
+    return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+}
+
+/**
+ * Check Brute Force Attack on Login (Max 3 failed attempts in 5 minutes)
+ */
+function checkBruteForceLockout($email) {
+    $pdo = getDBConnection();
+    if (!$pdo) return ['is_blocked' => false, 'attempts' => 0];
+
+    $ip = getClientIP();
+    $maxAttempts = 3;
+    $lockoutMinutes = 5;
+
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) as failed_count, MAX(attempted_at) as last_attempt 
+                                FROM login_attempts 
+                                WHERE (email = ? OR ip_address = ?) 
+                                  AND attempted_at > (NOW() - INTERVAL ? MINUTE)");
+        $stmt->execute([$email, $ip, $lockoutMinutes]);
+        $data = $stmt->fetch();
+
+        $failedCount = (int)($data['failed_count'] ?? 0);
+        $lastAttempt = $data['last_attempt'] ?? null;
+
+        if ($failedCount >= $maxAttempts && $lastAttempt) {
+            $lastTime = strtotime($lastAttempt);
+            $unlockTime = $lastTime + ($lockoutMinutes * 60);
+            $secondsRemaining = max(0, $unlockTime - time());
+            $minutesRemaining = ceil($secondsRemaining / 60);
+
+            if ($secondsRemaining > 0) {
+                return [
+                    'is_blocked' => true,
+                    'attempts' => $failedCount,
+                    'remaining_minutes' => $minutesRemaining,
+                    'remaining_seconds' => $secondsRemaining
+                ];
+            }
+        }
+
+        return [
+            'is_blocked' => false,
+            'attempts' => $failedCount
+        ];
+
+    } catch (Exception $e) {
+        return ['is_blocked' => false, 'attempts' => 0];
+    }
+}
+
+/**
+ * Record a Failed Login Attempt
+ */
+function recordFailedLogin($email) {
+    $pdo = getDBConnection();
+    if (!$pdo) return;
+
+    $ip = getClientIP();
+    try {
+        $stmt = $pdo->prepare("INSERT INTO login_attempts (ip_address, email) VALUES (?, ?)");
+        $stmt->execute([$ip, $email]);
+    } catch (Exception $e) {}
+}
+
+/**
+ * Clear Failed Login Attempts upon Successful Login
+ */
+function clearLoginAttempts($email) {
+    $pdo = getDBConnection();
+    if (!$pdo) return;
+
+    $ip = getClientIP();
+    try {
+        $stmt = $pdo->prepare("DELETE FROM login_attempts WHERE email = ? OR ip_address = ?");
+        $stmt->execute([$email, $ip]);
+    } catch (Exception $e) {}
+}
+

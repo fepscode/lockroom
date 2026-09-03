@@ -28,36 +28,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($email) || empty($password)) {
         $error = 'Harap isi email dan kata sandi!';
     } else {
-        $pdo = getDBConnection();
-        if ($pdo) {
-            // Superadmin can login via the Pemilik form
-            if ($formRole === 'pemilik') {
-                $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND (role = 'pemilik' OR role = 'superadmin') LIMIT 1");
-            } else {
-                $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND role = 'penyewa' LIMIT 1");
-            }
-            $stmt->execute([$email]);
-            $user = $stmt->fetch();
-
-            if ($user && password_verify($password, $user['password'])) {
-                // Login Success
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_name'] = $user['name'];
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_phone'] = $user['phone'];
-                $_SESSION['user_role'] = $user['role'];
-
-                if ($user['role'] === 'pemilik' || $user['role'] === 'superadmin') {
-                    header("Location: " . BASE_URL . "/owner/index.php");
-                } else {
-                    header("Location: " . BASE_URL . "/tenant/index.php");
-                }
-                exit;
-            } else {
-                $error = 'Email atau kata sandi tidak cocok!';
-            }
+        // Check Brute Force Lockout (Max 3 failed attempts in 5 minutes)
+        $lockout = checkBruteForceLockout($email);
+        if ($lockout['is_blocked']) {
+            $error = "⚠️ Terlalu banyak percobaan login yang gagal (3 kali). Akses login dikunci sementara selama {$lockout['remaining_minutes']} menit demi keamanan.";
         } else {
-            $error = 'Koneksi database gagal. Silakan buka halaman install.php terlebih dahulu.';
+            $pdo = getDBConnection();
+            if ($pdo) {
+                // Superadmin can login via the Pemilik form
+                if ($formRole === 'pemilik') {
+                    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND (role = 'pemilik' OR role = 'superadmin') LIMIT 1");
+                } else {
+                    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND role = 'penyewa' LIMIT 1");
+                }
+                $stmt->execute([$email]);
+                $user = $stmt->fetch();
+
+                if ($user && password_verify($password, $user['password'])) {
+                    // Login Success:
+                    // 1. Clear failed attempts counter
+                    clearLoginAttempts($email);
+
+                    // 2. Session Fixation Protection: Regenerate session ID
+                    session_regenerate_id(true);
+
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_name'] = $user['name'];
+                    $_SESSION['user_email'] = $user['email'];
+                    $_SESSION['user_phone'] = $user['phone'];
+                    $_SESSION['user_role'] = $user['role'];
+
+                    if ($user['role'] === 'pemilik' || $user['role'] === 'superadmin') {
+                        header("Location: " . BASE_URL . "/owner/index.php");
+                    } else {
+                        header("Location: " . BASE_URL . "/tenant/index.php");
+                    }
+                    exit;
+                } else {
+                    // Login Failed: Record failed attempt and calculate remaining chances
+                    recordFailedLogin($email);
+                    $newLockout = checkBruteForceLockout($email);
+
+                    if ($newLockout['is_blocked']) {
+                        $error = "⚠️ Anda telah salah memasukkan kata sandi sebanyak 3 kali! Akses login dikunci sementara selama {$newLockout['remaining_minutes']} menit demi keamanan.";
+                    } else {
+                        $remainingChances = max(0, 3 - $newLockout['attempts']);
+                        $error = "Email atau kata sandi tidak cocok! (Sisa percobaan: {$remainingChances} kali sebelum akun dikunci sementara).";
+                    }
+                }
+            } else {
+                $error = 'Koneksi database gagal. Silakan buka halaman install.php terlebih dahulu.';
+            }
         }
     }
 }
