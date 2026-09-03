@@ -95,6 +95,25 @@
                 confirmButtonColor: '#10b981'
             });
         <?php endif; ?>
+
+        // Back to Top Scroll Logic
+        const tenantBackToTop = document.getElementById('tenantBackToTop');
+        if (tenantBackToTop) {
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 250) {
+                    tenantBackToTop.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+                    tenantBackToTop.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+                } else {
+                    tenantBackToTop.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
+                    tenantBackToTop.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+                }
+            });
+        }
     </script>
+
+    <!-- Floating Back to Top Button -->
+    <button id="tenantBackToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" type="button" aria-label="Kembali ke Atas" class="fixed bottom-20 md:bottom-6 right-6 z-40 w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-xl shadow-emerald-600/40 flex items-center justify-center transition-all duration-300 opacity-0 translate-y-10 pointer-events-none group border border-white/20">
+        <i class="fa-solid fa-arrow-up text-xs transition-transform duration-300 group-hover:-translate-y-0.5"></i>
+    </button>
 </body>
 </html>

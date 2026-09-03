@@ -626,7 +626,33 @@ if ($pdo) {
         </div>
     </footer>
 
+    <!-- Floating Back to Top Button -->
+    <button id="backToTopBtn" onclick="scrollToTop()" type="button" aria-label="Kembali ke Atas" class="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white shadow-xl shadow-indigo-600/40 hover:shadow-indigo-600/60 flex items-center justify-center transition-all duration-300 opacity-0 translate-y-10 pointer-events-none group border border-white/20">
+        <i class="fa-solid fa-arrow-up text-sm transition-transform duration-300 group-hover:-translate-y-1"></i>
+    </button>
+
+    <script>
+    const backToTopBtn = document.getElementById('backToTopBtn');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            backToTopBtn.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+            backToTopBtn.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+        } else {
+            backToTopBtn.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
+            backToTopBtn.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+        }
+    });
+
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+    </script>
+
     <!-- Frontend Interactive Script -->
     <script src="assets/js/app.js"></script>
 </body>
 </html>
+
