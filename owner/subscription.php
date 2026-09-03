@@ -236,23 +236,31 @@ $orders = $stmtOrders->fetchAll();
             </button>
         </div>
 
-        <form method="POST" action="subscription.php" enctype="multipart/form-data" class="p-6 space-y-5 max-h-[85vh] overflow-y-auto">
-            <input type="hidden" name="action" value="submit_payment">
-            <input type="hidden" name="plan_id" id="modalPlanIdInput" value="">
-
+        <!-- 1. WAITING FOR PAYMENT STATE -->
+        <div id="paymentWaitingState" class="p-6 space-y-4 max-h-[85vh] overflow-y-auto">
+            
             <!-- Ringkasan Paket & Nominal Pas -->
             <div class="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-between">
                 <div>
                     <div class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold" id="modalPlanNameText">Paket Langganan</div>
                     <div class="text-xl font-extrabold text-indigo-700 dark:text-cyan-400 font-heading mt-0.5" id="modalAmountText">Rp 0</div>
                 </div>
-                <div class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider">
-                    Nominal Pas
+                <div class="text-right">
+                    <div class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider inline-block">
+                        Nominal Pas
+                    </div>
+                    <div class="text-[10px] font-mono text-slate-400 mt-1" id="modalOrderCodeText">SUB-WAITING</div>
                 </div>
             </div>
 
+            <!-- Real-time Live Status Pulse -->
+            <div class="flex items-center justify-center gap-2 py-1 px-3 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span>Mendeteksi Pembayaran Otomatis...</span>
+            </div>
+
             <!-- Barcode QRIS Display -->
-            <div class="text-center space-y-3">
+            <div class="text-center space-y-2.5">
                 <div class="text-xs text-slate-600 dark:text-slate-300 font-semibold">
                     Scan barcode di bawah menggunakan aplikasi e-wallet atau m-Banking Anda:
                 </div>
@@ -275,38 +283,123 @@ $orders = $stmtOrders->fetchAll();
                 </div>
             </div>
 
-            <!-- Panduan Pembayaran Mudah -->
-            <div class="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/30 space-y-1.5 text-center">
-                <div class="text-xs font-bold text-slate-800 dark:text-white flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-circle-info text-indigo-600"></i>
-                    <span>Verifikasi Otomatis QRIS GoPay Merchant</span>
-                </div>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Setelah menyelesaikan scan dan transfer pada aplikasi Anda, cukup klik tombol konfirmasi di bawah. Notifikasi akan langsung masuk ke Super Admin.
-                </p>
+            <!-- Tombol Simulasi Pengujian (Developer / Testing Otomatis) -->
+            <div class="pt-2">
+                <button onclick="simulatePaymentNow()" type="button" class="w-full py-3 px-4 rounded-xl font-bold text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-500/30 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-bolt text-amber-500"></i> Coba Simulasi Bayar Lunas (Testing Otomatis)
+                </button>
             </div>
 
-            <button type="submit" class="w-full py-4 px-4 rounded-2xl font-bold text-sm text-white shadow-xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600">
-                <i class="fa-solid fa-circle-check text-base"></i> Saya Sudah Bayar via QRIS
-            </button>
-        </form>
+        </div>
+
+        <!-- 2. PAYMENT SUCCESS CELEBRATION STATE (HIDDEN BY DEFAULT) -->
+        <div id="paymentSuccessState" class="p-8 text-center space-y-4 hidden">
+            <div class="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-4xl mx-auto shadow-xl animate-bounce">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            
+            <h3 class="text-xl font-extrabold text-slate-900 dark:text-white font-heading">Pembayaran Berhasil!</h3>
+            
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Terima kasih! Pembayaran QRIS Anda telah <strong class="text-emerald-600">terverifikasi otomatis</strong>. Masa aktif akun Anda telah diperpanjang.
+            </p>
+
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-500" id="successOrderDetails">
+                Status: LUNAS &amp; AKTIF
+            </div>
+
+            <div class="text-[11px] text-slate-400">
+                Halaman akan memuat ulang otomatis dalam 2 detik...
+            </div>
+        </div>
 
     </div>
 </div>
 
 <script>
+let activeOrderCode = null;
+let orderCheckTimer = null;
+
 function openQrisModal(planId, planName, amount, priceLabel) {
-    document.getElementById('modalPlanIdInput').value = planId;
     document.getElementById('modalPlanNameText').innerText = planName;
     document.getElementById('modalAmountText').innerText = priceLabel;
+    document.getElementById('modalOrderCodeText').innerText = 'Membuat Order...';
+    
+    // Reset States
+    document.getElementById('paymentWaitingState').classList.remove('hidden');
+    document.getElementById('paymentSuccessState').classList.add('hidden');
     document.getElementById('qrisModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+
+    // Initialize Order in Database via AJAX
+    const formData = new FormData();
+    formData.append('plan_id', planId);
+
+    fetch('../helpers/api_create_sub_order.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            activeOrderCode = data.order_code;
+            document.getElementById('modalOrderCodeText').innerText = data.order_code;
+            
+            // Start Auto Polling Payment Status
+            startPaymentPolling(activeOrderCode);
+        }
+    })
+    .catch(err => {
+        console.error("Order init error", err);
+    });
+}
+
+function startPaymentPolling(orderCode) {
+    if (orderCheckTimer) clearInterval(orderCheckTimer);
+
+    orderCheckTimer = setInterval(() => {
+        if (!orderCode) return;
+
+        fetch(`../helpers/api_check_order.php?order_code=${orderCode}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'paid') {
+                clearInterval(orderCheckTimer);
+                showPaymentSuccessScreen(data);
+            }
+        })
+        .catch(err => console.log('Polling check...', err));
+    }, 2500);
+}
+
+function simulatePaymentNow() {
+    if (!activeOrderCode) return;
+
+    fetch(`../helpers/api_check_order.php?order_code=${activeOrderCode}&simulate_pay=1`)
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'paid') {
+            clearInterval(orderCheckTimer);
+            showPaymentSuccessScreen(data);
+        }
+    });
+}
+
+function showPaymentSuccessScreen(data) {
+    document.getElementById('paymentWaitingState').classList.add('hidden');
+    document.getElementById('paymentSuccessState').classList.remove('hidden');
+    
+    setTimeout(() => {
+        window.location.reload();
+    }, 2500);
 }
 
 function closeQrisModal() {
+    if (orderCheckTimer) clearInterval(orderCheckTimer);
     document.getElementById('qrisModal').classList.add('hidden');
     document.body.style.overflow = 'auto';
 }
 </script>
 
 <?php require_once __DIR__ . '/footer.php'; ?>
+

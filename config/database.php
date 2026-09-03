@@ -24,6 +24,19 @@ if (!defined('ONESIGNAL_REST_API_KEY')) {
     define('ONESIGNAL_REST_API_KEY', 'YOUR_ONESIGNAL_REST_API_KEY');
 }
 
+// Fallback Midtrans Payment Gateway Configuration (QRIS GoPay & Virtual Account)
+// Dapatkan Server Key & Client Key dari https://dashboard.midtrans.com/ (Gratis)
+if (!defined('MIDTRANS_SERVER_KEY')) {
+    define('MIDTRANS_SERVER_KEY', 'SB-Mid-server-YOUR_SERVER_KEY');
+}
+if (!defined('MIDTRANS_CLIENT_KEY')) {
+    define('MIDTRANS_CLIENT_KEY', 'SB-Mid-client-YOUR_CLIENT_KEY');
+}
+if (!defined('MIDTRANS_IS_PRODUCTION')) {
+    define('MIDTRANS_IS_PRODUCTION', false); // false = Sandbox Simulator, true = Live Production
+}
+
+
 function getDBConnection() {
     static $pdo = null;
     if ($pdo === null) {
