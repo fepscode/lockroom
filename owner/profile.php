@@ -1,6 +1,7 @@
 <?php
 // Top Level Authentication & Logic Execution
 require_once __DIR__ . '/../helpers/auth.php';
+require_once __DIR__ . '/../helpers/indonesia_cities.php';
 requireLogin('pemilik');
 
 $user = currentUser();
@@ -186,30 +187,8 @@ require_once __DIR__ . '/header.php';
                     </div>
                 </div>
 
-                <!-- Datalist for Cities -->
-                <datalist id="citiesProfileList">
-                    <option value="Jakarta Selatan">
-                    <option value="Jakarta Barat">
-                    <option value="Jakarta Pusat">
-                    <option value="Jakarta Timur">
-                    <option value="Jakarta Utara">
-                    <option value="Bandung">
-                    <option value="Yogyakarta">
-                    <option value="Surabaya">
-                    <option value="Semarang">
-                    <option value="Malang">
-                    <option value="Solo (Surakarta)">
-                    <option value="Bogor">
-                    <option value="Depok">
-                    <option value="Tangerang">
-                    <option value="Tangerang Selatan">
-                    <option value="Bekasi">
-                    <option value="Medan">
-                    <option value="Denpasar (Bali)">
-                    <option value="Makassar">
-                    <option value="Palembang">
-                    <option value="Batam">
-                </datalist>
+                <!-- Complete Datalist for All Cities in Indonesia -->
+                <?= renderCityDatalist('citiesProfileList') ?>
 
                 <button type="submit" class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 mt-4">
                     <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan Profil & Foto

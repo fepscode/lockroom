@@ -1,6 +1,7 @@
 <?php
 // Top Level Authentication & Logic Execution (Prevents Header Sent Warnings)
 require_once __DIR__ . '/../helpers/auth.php';
+require_once __DIR__ . '/../helpers/indonesia_cities.php';
 requireLogin('pemilik');
 
 $user = currentUser();
@@ -204,30 +205,8 @@ $pageTitle = 'Kelola Rumah Kos & Kamar';
 require_once __DIR__ . '/header.php';
 ?>
 
-<!-- Datalist Autocomplete Pilihan Kota di Indonesia -->
-<datalist id="citySuggestions">
-    <option value="Jakarta Selatan">Jakarta Selatan</option>
-    <option value="Jakarta Pusat">Jakarta Pusat</option>
-    <option value="Jakarta Barat">Jakarta Barat</option>
-    <option value="Jakarta Timur">Jakarta Timur</option>
-    <option value="Jakarta Utara">Jakarta Utara</option>
-    <option value="Bogor">Bogor</option>
-    <option value="Depok">Depok</option>
-    <option value="Tangerang">Tangerang</option>
-    <option value="Tangerang Selatan">Tangerang Selatan</option>
-    <option value="Bekasi">Bekasi</option>
-    <option value="Bandung">Bandung</option>
-    <option value="Semarang">Semarang</option>
-    <option value="Yogyakarta">Yogyakarta</option>
-    <option value="Surakarta (Solo)">Surakarta (Solo)</option>
-    <option value="Surabaya">Surabaya</option>
-    <option value="Malang">Malang</option>
-    <option value="Denpasar">Denpasar</option>
-    <option value="Medan">Medan</option>
-    <option value="Palembang">Palembang</option>
-    <option value="Balikpapan">Balikpapan</option>
-    <option value="Makassar">Makassar</option>
-</datalist>
+<!-- Complete Datalist Autocomplete Pilihan Seluruh Kota di Indonesia -->
+<?= renderCityDatalist('citySuggestions') ?>
 
 <!-- Header Actions & Tabs -->
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

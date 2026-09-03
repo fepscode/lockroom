@@ -4,6 +4,7 @@
 
 require_once __DIR__ . '/../helpers/auth.php';
 require_once __DIR__ . '/../helpers/mail.php';
+require_once __DIR__ . '/../helpers/indonesia_cities.php';
 
 $requestedRole = $_GET['role'] ?? 'pemilik';
 
@@ -461,30 +462,8 @@ $currentOTPData = $_SESSION['pending_otp'] ?? null;
                             </form>
                         <?php endif; ?>
 
-                        <!-- Autocomplete Suggestions for Indonesian Cities -->
-                        <datalist id="citiesList">
-                            <option value="Jakarta Selatan">
-                            <option value="Jakarta Barat">
-                            <option value="Jakarta Pusat">
-                            <option value="Jakarta Timur">
-                            <option value="Jakarta Utara">
-                            <option value="Bandung">
-                            <option value="Yogyakarta">
-                            <option value="Surabaya">
-                            <option value="Semarang">
-                            <option value="Malang">
-                            <option value="Solo (Surakarta)">
-                            <option value="Bogor">
-                            <option value="Depok">
-                            <option value="Tangerang">
-                            <option value="Tangerang Selatan">
-                            <option value="Bekasi">
-                            <option value="Medan">
-                            <option value="Denpasar (Bali)">
-                            <option value="Makassar">
-                            <option value="Palembang">
-                            <option value="Batam">
-                        </datalist>
+                        <!-- Complete Autocomplete Suggestions for All 514+ Cities in Indonesia -->
+                        <?= renderCityDatalist('citiesList') ?>
 
                     <!-- ================= STEP 2: VERIFIKASI KODE OTP ================= -->
                     <?php else: ?>
