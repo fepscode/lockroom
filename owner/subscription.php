@@ -155,8 +155,8 @@ $orders = $stmtOrders->fetchAll();
                     </ul>
                 </div>
 
-                <button onclick="openQrisModal('<?= $key ?>', '<?= addslashes($p['name']) ?>', <?= $p['price'] ?>, '<?= $p['price_label'] ?>')" type="button" class="w-full py-3.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 <?= $p['popular'] ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white' ?>">
-                    <i class="fa-solid fa-qrcode text-sm"></i> Bayar dengan QRIS
+                <button onclick="confirmSubscriptionPlan('<?= $key ?>', '<?= addslashes($p['name']) ?>', <?= $p['price'] ?>, '<?= $p['price_label'] ?>', <?= $p['duration_days'] ?>)" type="button" class="w-full py-3.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 <?= $p['popular'] ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white' ?>">
+                    <i class="fa-solid fa-gem text-xs"></i> BERLANGGANAN PAKET INI
                 </button>
             </div>
         <?php endforeach; ?>
@@ -316,9 +316,64 @@ $orders = $stmtOrders->fetchAll();
     </div>
 </div>
 
+<!-- ================= MODAL KONFIRMASI VERIFIKASI LANGGANAN (YA / TIDAK) ================= -->
+<div id="confirmPlanModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="relative max-w-sm w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 p-6 text-center space-y-5">
+        
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 text-white flex items-center justify-center text-2xl mx-auto shadow-lg shadow-indigo-600/20">
+            <i class="fa-solid fa-gem"></i>
+        </div>
+
+        <div class="space-y-1.5">
+            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white font-heading">Konfirmasi Berlangganan</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Apakah Anda yakin ingin berlangganan paket ini?</p>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/30 text-left space-y-1">
+            <div class="text-[11px] text-slate-400 uppercase tracking-wider font-bold">Paket Pilihan:</div>
+            <div class="text-sm font-extrabold text-slate-900 dark:text-white font-heading" id="confirmPlanNameText">-</div>
+            <div class="text-xs text-indigo-600 dark:text-cyan-400 font-extrabold pt-1" id="confirmPlanPriceText">-</div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-1">
+            <button onclick="closeConfirmModal()" type="button" class="py-3 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-xmark"></i> Tidak
+            </button>
+            <button onclick="proceedToPayment()" type="button" class="py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-check"></i> Ya, Lanjutkan
+            </button>
+        </div>
+
+    </div>
+</div>
+
 <script>
 let activeOrderCode = null;
 let orderCheckTimer = null;
+let pendingPlanData = null;
+
+// Step 1: Open Verification Confirmation Modal (Ya / Tidak)
+function confirmSubscriptionPlan(planId, planName, amount, priceLabel, durationDays) {
+    pendingPlanData = { planId, planName, amount, priceLabel, durationDays };
+    document.getElementById('confirmPlanNameText').innerText = planName;
+    document.getElementById('confirmPlanPriceText').innerText = priceLabel + ' • Masa Aktif ' + durationDays + ' Hari';
+    document.getElementById('confirmPlanModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeConfirmModal() {
+    pendingPlanData = null;
+    document.getElementById('confirmPlanModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Step 2: Proceed to QRIS Payment if User Clicks "Ya"
+function proceedToPayment() {
+    if (!pendingPlanData) return;
+    const plan = pendingPlanData;
+    closeConfirmModal();
+    openQrisModal(plan.planId, plan.planName, plan.amount, plan.priceLabel);
+}
 
 function openQrisModal(planId, planName, amount, priceLabel) {
     document.getElementById('modalPlanNameText').innerText = planName;
