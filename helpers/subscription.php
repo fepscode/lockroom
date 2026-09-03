@@ -14,8 +14,8 @@ function getSubscriptionPlans() {
             'id' => 'paket_1_bulan',
             'name' => 'Paket Basic (1 Bulan)',
             'duration_days' => 30,
-            'price' => 49000,
-            'price_label' => 'Rp 49.000',
+            'price' => 39900,
+            'price_label' => 'Rp 39.900',
             'badge' => 'BULANAN',
             'description' => 'Akses penuh seluruh fitur manajemen kos & kontrakan selama 30 hari.',
             'popular' => false
@@ -24,20 +24,20 @@ function getSubscriptionPlans() {
             'id' => 'paket_6_bulan',
             'name' => 'Paket Hemat (6 Bulan)',
             'duration_days' => 180,
-            'price' => 269000,
-            'price_label' => 'Rp 269.000',
+            'price' => 219000,
+            'price_label' => 'Rp 219.000',
             'badge' => 'HEMAT 10%',
-            'description' => 'Akses operasional kos stabil selama setengah tahun (180 hari).',
+            'description' => 'Akses operasional kos stabil selama setengah tahun (180 hari). Hemat 10%.',
             'popular' => false
         ],
         'paket_1_tahun' => [
             'id' => 'paket_1_tahun',
             'name' => 'Paket Pro (1 Tahun)',
             'duration_days' => 365,
-            'price' => 499000,
-            'price_label' => 'Rp 499.000',
+            'price' => 399000,
+            'price_label' => 'Rp 399.000',
             'badge' => 'TERBAIK & HEMAT 2 BULAN',
-            'description' => 'Pilihan paling hemat untuk pengusaha kos. Bebas cemas selama 365 hari penuh.',
+            'description' => 'Pilihan paling hemat untuk pengusaha kos. Bebas cemas 365 hari (cukup bayar 10 bulan).',
             'popular' => true
         ]
     ];
