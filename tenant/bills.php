@@ -159,6 +159,9 @@ $bills = $stmtBills->fetchAll();
                                 <?php elseif ($b['status'] === 'lunas'): ?>
                                     <div class="flex items-center justify-end gap-2">
                                         <span class="text-xs text-emerald-600 dark:text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> LUNAS</span>
+                                        <a href="../bills/receipt.php?bill_id=<?= $b['id'] ?>" target="_blank" class="p-1 px-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-600 hover:text-white text-indigo-700 dark:text-indigo-300 text-[11px] font-bold transition-all border border-indigo-200 dark:border-indigo-500/30 inline-flex items-center gap-1" title="Cetak Kwitansi Resmi">
+                                            <i class="fa-solid fa-print text-indigo-500"></i> Kwitansi
+                                        </a>
                                         <?php if (!empty($b['proof_image'])): ?>
                                             <button onclick='openProofPreview("<?= htmlspecialchars($b['proof_image']) ?>")' class="p-1 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-600 dark:text-slate-300 text-[11px] font-semibold transition-all border border-slate-200 dark:border-slate-700" title="Lihat Bukti Transfer">
                                                 <i class="fa-solid fa-receipt"></i> Bukti

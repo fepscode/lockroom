@@ -93,9 +93,14 @@ $activeLeases = $stmtActiveLeases->fetchAll();
         <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white font-heading">Tagihan & Verifikasi Pembayaran</h2>
         <p class="text-slate-500 dark:text-slate-400 text-xs mt-1">Terbitkan invoice sewa bulanan dan verifikasi bukti transfer pembayaran dari penyewa.</p>
     </div>
-    <button onclick="openCreateBillModal()" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/30 transition-all flex items-center justify-center gap-2">
-        <i class="fa-solid fa-plus"></i> Terbitkan Tagihan Baru
-    </button>
+    <div class="flex items-center gap-3">
+        <a href="export_bills.php" class="px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/30 transition-all flex items-center justify-center gap-2">
+            <i class="fa-solid fa-file-excel"></i> Unduh Excel
+        </a>
+        <button onclick="openCreateBillModal()" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/30 transition-all flex items-center justify-center gap-2">
+            <i class="fa-solid fa-plus"></i> Terbitkan Tagihan Baru
+        </button>
+    </div>
 </div>
 
 <!-- Bills Table -->
@@ -147,17 +152,34 @@ $activeLeases = $stmtActiveLeases->fetchAll();
                                 <?php endif; ?>
                             </td>
                             <td class="p-4 text-right">
-                                <?php if ($b['status'] === 'menunggu_verifikasi'): ?>
-                                    <button onclick='openVerifyModal(<?= json_encode($b) ?>)' class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md transition-all flex items-center gap-1.5 inline-flex">
-                                        <i class="fa-solid fa-file-circle-check"></i> Verifikasi Bayar
-                                    </button>
-                                <?php elseif ($b['status'] === 'lunas' && !empty($b['proof_image'])): ?>
-                                    <button onclick='openProofPreview("<?= htmlspecialchars($b['proof_image']) ?>")' class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-700 dark:text-slate-300 text-xs transition-all inline-flex items-center gap-1 border border-slate-200 dark:border-slate-700">
-                                        <i class="fa-solid fa-image text-indigo-500"></i> Bukti Bayar
-                                    </button>
-                                <?php else: ?>
-                                    <span class="text-slate-400 text-xs italic">-</span>
-                                <?php endif; ?>
+                                <div class="flex items-center justify-end gap-2 flex-wrap">
+                                    <?php if ($b['status'] === 'menunggu_verifikasi'): ?>
+                                        <button onclick='openVerifyModal(<?= json_encode($b) ?>)' class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md transition-all flex items-center gap-1.5 inline-flex">
+                                            <i class="fa-solid fa-file-circle-check"></i> Verifikasi
+                                        </button>
+                                    <?php endif; ?>
+
+                                    <?php if ($b['status'] === 'lunas'): ?>
+                                        <a href="../bills/receipt.php?bill_id=<?= $b['id'] ?>" target="_blank" class="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-600 hover:text-white text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200 dark:border-indigo-500/30 inline-flex items-center gap-1 transition-all" title="Cetak Kwitansi Resmi">
+                                            <i class="fa-solid fa-print text-indigo-500"></i> Kwitansi
+                                        </a>
+                                        <?php if (!empty($b['proof_image'])): ?>
+                                            <button onclick='openProofPreview("<?= htmlspecialchars($b['proof_image']) ?>")' class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-700 dark:text-slate-300 text-xs transition-all inline-flex items-center gap-1 border border-slate-200 dark:border-slate-700" title="Lihat Bukti Bayar">
+                                                <i class="fa-solid fa-image text-indigo-500"></i> Bukti
+                                            </button>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <?php if (!empty($b['tenant_phone'])): 
+                                            $waClean = preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $b['tenant_phone']));
+                                            $waMsg = "Halo kak " . $b['tenant_name'] . ", pengingat tagihan sewa Kamar " . $b['room_number'] . " (" . $b['title'] . ") sebesar " . formatRupiah($b['amount']) . " jatuh tempo pada " . formatDateIndo($b['due_date']) . ". Mohon segera melakukan pembayaran melalui aplikasi LOCK & ROOM. Terima kasih 🙏";
+                                            $waLink = "https://api.whatsapp.com/send?phone=" . $waClean . "&text=" . urlencode($waMsg);
+                                        ?>
+                                            <a href="<?= $waLink ?>" target="_blank" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-500/30 inline-flex items-center gap-1 transition-all" title="Kirim Pengingat WhatsApp">
+                                                <i class="fa-brands fa-whatsapp text-emerald-600 text-sm"></i> Pengingat WA
+                                            </a>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>

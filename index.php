@@ -24,9 +24,10 @@ if ($pdo) {
         $properties = $stmtProps->fetchAll();
 
         // Fetch rooms for promotion catalog
-        $stmtRooms = $pdo->query("SELECT r.*, p.name as property_name, p.city, p.type as property_type 
+        $stmtRooms = $pdo->query("SELECT r.*, p.name as property_name, p.city, p.type as property_type, u.phone as owner_phone, u.name as owner_name 
                                   FROM rooms r 
                                   JOIN properties p ON r.property_id = p.id 
+                                  JOIN users u ON p.owner_id = u.id
                                   ORDER BY r.status ASC, r.id ASC LIMIT 9");
         $rooms = $stmtRooms->fetchAll();
 
@@ -76,8 +77,18 @@ if ($pdo) {
                 }
             }
         }
-    </script>
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/images/icons/icon-192.png">
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        });
+    }
+    </script>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-indigo-500 selection:text-white antialiased transition-colors duration-200">
@@ -478,9 +489,19 @@ if ($pdo) {
                                             <?= formatRupiah($room['price_monthly']) ?> <span class="text-xs font-normal text-slate-500 dark:text-slate-400">/bln</span>
                                         </div>
                                     </div>
-                                    <a href="auth/login.php?role=penyewa" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-700 dark:text-slate-300 text-xs font-bold transition-all flex items-center gap-1.5">
-                                        Login Penyewa <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                                    </a>
+                                    <?php if ($room['status'] === 'tersedia'): 
+                                        $ownerPhone = !empty($room['owner_phone']) ? preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $room['owner_phone'])) : '6281234567890';
+                                        $waText = "Halo pengelola " . $room['property_name'] . ", saya tertarik dengan Kamar " . $room['room_number'] . " (" . $room['room_type'] . ") tarif " . formatRupiah($room['price_monthly']) . "/bln di website LOCK & ROOM. Apakah masih tersedia untuk disurvei/booking?";
+                                        $waBookingUrl = "https://api.whatsapp.com/send?phone=" . $ownerPhone . "&text=" . urlencode($waText);
+                                    ?>
+                                        <a href="<?= $waBookingUrl ?>" target="_blank" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shadow-emerald-600/30">
+                                            <i class="fa-brands fa-whatsapp text-sm"></i> Tanya / Booking
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 text-xs font-semibold">
+                                            Terisi Penuh
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
 
