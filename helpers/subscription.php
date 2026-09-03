@@ -184,27 +184,52 @@ function notifyAdminNewSubscriptionOrder($orderId) {
  * Notify Owner when Subscription is Approved by Admin
  */
 function notifyOwnerSubscriptionApproved($orderId) {
+    notifyPaymentSettledBoth($orderId);
+}
+
+/**
+ * Notify BOTH Customer (Owner) and Super Admin when Payment is LUNAS
+ */
+function notifyPaymentSettledBoth($orderId) {
     $pdo = getDBConnection();
     if (!$pdo) return;
 
     try {
-        $stmt = $pdo->prepare("SELECT o.*, u.subscription_ends_at 
+        $stmt = $pdo->prepare("SELECT o.*, u.name as owner_name, u.subscription_ends_at 
                                 FROM subscription_orders o 
                                 JOIN users u ON o.owner_id = u.id 
                                 WHERE o.id = ? LIMIT 1");
         $stmt->execute([$orderId]);
         $order = $stmt->fetch();
 
-        if ($order && !empty($order['owner_id'])) {
+        if ($order) {
             $expiryDate = formatDateIndo($order['subscription_ends_at']);
-            $title = "🎉 Langganan Diaktifkan!";
-            $message = "Pembayaran untuk {$order['plan_name']} telah diverifikasi oleh Admin. Masa aktif kos Anda diperpanjang hingga {$expiryDate}.";
-            $url = BASE_URL . '/owner/subscription.php';
 
-            sendOneSignalPush($order['owner_id'], $title, $message, $url, [
-                'type' => 'subscription_approved',
+            // 1. Notifikasi Pop-Up ke Pelanggan (Pemilik Kos yang membayar)
+            if (!empty($order['owner_id'])) {
+                $customerTitle = "🎉 Pembayaran Lunas & Akun Aktif!";
+                $customerMsg = "Pembayaran untuk {$order['plan_name']} telah berhasil diterima via QRIS GoPay. Masa aktif kos Anda diperpanjang hingga {$expiryDate}.";
+                $customerUrl = BASE_URL . '/owner/subscription.php';
+
+                sendOneSignalPush($order['owner_id'], $customerTitle, $customerMsg, $customerUrl, [
+                    'type' => 'subscription_approved',
+                    'order_id' => $orderId
+                ]);
+            }
+
+            // 2. Notifikasi Pop-Up ke Super Admin (Pemilik Aplikasi)
+            $stmtAdmin = $pdo->query("SELECT id FROM users WHERE role = 'superadmin' ORDER BY id ASC LIMIT 1");
+            $adminId = $stmtAdmin->fetchColumn() ?: 1;
+
+            $adminTitle = "💰 Uang Masuk: Pembayaran QRIS Lunas!";
+            $adminMsg = "Pembayaran dari {$order['owner_name']} ({$order['plan_name']}) sebesar " . formatRupiah($order['amount']) . " telah LUNAS terverifikasi.";
+            $adminUrl = BASE_URL . '/owner/admin_subscriptions.php';
+
+            sendOneSignalPush($adminId, $adminTitle, $adminMsg, $adminUrl, [
+                'type' => 'subscription_settled',
                 'order_id' => $orderId
             ]);
         }
     } catch (Exception $e) {}
 }
+

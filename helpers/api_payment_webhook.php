@@ -86,13 +86,8 @@ if ($transactionStatus === 'settlement' || ($transactionStatus === 'capture' && 
             WHERE id = ?");
         $stmtUpdateOrder->execute([strtoupper($paymentType), $order['id']]);
 
-        // Send Push Notifications via OneSignal
-        notifyOwnerSubscriptionApproved($order['id']);
-
-        // Notify Super Admin
-        $stmtAdmin = $pdo->query("SELECT id FROM users WHERE role = 'superadmin' ORDER BY id ASC LIMIT 1");
-        $adminId = $stmtAdmin->fetchColumn() ?: 1;
-        sendOneSignalPush($adminId, "✅ Pembayaran QRIS Berhasil Masuk!", "Pemilik akun telah membayar {$order['plan_name']} sebesar " . formatRupiah($order['amount']) . " dan akun telah aktif otomatis.", BASE_URL . '/owner/admin_subscriptions.php');
+        // Send Push Notifications via OneSignal to BOTH Customer and Super Admin
+        notifyPaymentSettledBoth($order['id']);
     }
 
     http_response_code(200);
