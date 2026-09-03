@@ -9,7 +9,7 @@ $isOwner = ($role === 'pemilik');
 
 // Redirect if already logged in
 if (isLoggedIn()) {
-    if ($_SESSION['user_role'] === 'pemilik') {
+    if ($_SESSION['user_role'] === 'pemilik' || $_SESSION['user_role'] === 'superadmin') {
         header("Location: " . BASE_URL . "/owner/index.php");
     } else {
         header("Location: " . BASE_URL . "/tenant/index.php");
@@ -30,8 +30,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $pdo = getDBConnection();
         if ($pdo) {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND role = ? LIMIT 1");
-            $stmt->execute([$email, $formRole]);
+            // Superadmin can login via the Pemilik form
+            if ($formRole === 'pemilik') {
+                $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND (role = 'pemilik' OR role = 'superadmin') LIMIT 1");
+            } else {
+                $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND role = 'penyewa' LIMIT 1");
+            }
+            $stmt->execute([$email]);
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password'])) {
@@ -42,14 +47,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_phone'] = $user['phone'];
                 $_SESSION['user_role'] = $user['role'];
 
-                if ($user['role'] === 'pemilik') {
+                if ($user['role'] === 'pemilik' || $user['role'] === 'superadmin') {
                     header("Location: " . BASE_URL . "/owner/index.php");
                 } else {
                     header("Location: " . BASE_URL . "/tenant/index.php");
                 }
                 exit;
             } else {
-                $error = 'Email atau kata sandi tidak cocok untuk role ' . ($formRole === 'pemilik' ? 'Pemilik' : 'Penyewa') . '!';
+                $error = 'Email atau kata sandi tidak cocok!';
             }
         } else {
             $error = 'Koneksi database gagal. Silakan buka halaman install.php terlebih dahulu.';
