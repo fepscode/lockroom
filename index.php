@@ -599,24 +599,27 @@ if ($pdo) {
                 </div>
             </div>
 
-            <!-- Center Powered by FeCo Showcase Badge -->
-            <div class="pt-10 pb-4 flex flex-col items-center justify-center text-center">
-                <a href="https://fepscode.my.id" target="_blank" rel="noopener noreferrer" class="group relative inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:via-purple-500/20 hover:to-pink-500/20 border border-indigo-500/30 hover:border-indigo-500/60 shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/25 backdrop-blur-xl transition-all duration-300 transform hover:-translate-y-0.5">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-                    </span>
-                    <div class="flex items-center gap-1.5">
-                        <span class="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 tracking-[0.2em] uppercase">POWERED BY</span>
-                        <span class="text-sm font-black tracking-wider bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400 bg-clip-text text-transparent font-heading">FECO</span>
-                    </div>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-xs text-indigo-500 dark:text-cyan-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"></i>
-                </a>
-            </div>
+            <div class="pt-8 mt-12 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+                <!-- Sisi Kiri: Copyright -->
+                <div class="text-center md:text-left order-2 md:order-1">
+                    &copy; <?= date('Y') ?> <strong>LOCK & ROOM (L n' R)</strong>. All rights reserved.
+                </div>
 
-            <div class="pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-                <div>&copy; <?= date('Y') ?> <strong>LOCK & ROOM (L n' R)</strong>. All rights reserved.</div>
-                <div class="flex items-center gap-4">
+                <!-- Bagian Tengah: POWERED BY FECO (Mencolok & Keren) -->
+                <div class="order-1 md:order-2 flex items-center justify-center">
+                    <a href="https://fepscode.my.id" target="_blank" rel="noopener noreferrer" class="group relative inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:via-purple-500/20 hover:to-pink-500/20 border border-indigo-500/30 hover:border-indigo-500/70 shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/25 backdrop-blur-xl transition-all duration-300 transform hover:-translate-y-0.5">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                        </span>
+                        <span class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 tracking-[0.2em] uppercase">POWERED BY</span>
+                        <strong class="font-black text-xs tracking-wider bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400 bg-clip-text text-transparent font-heading">FECO</strong>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-indigo-500 dark:text-cyan-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"></i>
+                    </a>
+                </div>
+
+                <!-- Sisi Kanan: Foto Terverifikasi -->
+                <div class="text-center md:text-right order-3">
                     <span class="text-slate-500 dark:text-slate-400"><i class="fa-solid fa-shield-cat text-amber-500 mr-1"></i> Foto Terverifikasi Pemilik</span>
                 </div>
             </div>
