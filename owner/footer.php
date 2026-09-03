@@ -11,7 +11,7 @@
         <div class="grid grid-cols-5 gap-1 items-center">
             <a href="index.php" class="flex flex-col items-center justify-center py-1 rounded-xl transition-all <?= ($currentPage ?? '') === 'index.php' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' ?>">
                 <i class="fa-solid fa-gauge-high text-lg"></i>
-                <span class="text-[10px] mt-0.5">Ringkasan</span>
+                <span class="text-[10px] mt-0.5">Dashboard</span>
             </a>
             
             <a href="rooms.php" class="flex flex-col items-center justify-center py-1 rounded-xl transition-all <?= ($currentPage ?? '') === 'rooms.php' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' ?>">

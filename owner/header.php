@@ -154,7 +154,7 @@ if ($pdo) {
             <nav class="p-4 space-y-1.5 text-sm font-medium">
                 <a href="index.php" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all <?= $currentPage === 'index.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">
                     <i class="fa-solid fa-gauge-high w-5 text-center"></i>
-                    <span>Ringkasan</span>
+                    <span>Dashboard</span>
                 </a>
 
                 <a href="rooms.php" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all <?= $currentPage === 'rooms.php' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200' ?>">

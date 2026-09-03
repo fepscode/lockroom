@@ -1,5 +1,5 @@
 <?php
-$pageTitle = 'Ringkasan Dashboard';
+$pageTitle = 'Dashboard';
 require_once __DIR__ . '/header.php';
 
 // Fetch statistics for owner
