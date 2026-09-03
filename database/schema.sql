@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `name` VARCHAR(100) NOT NULL,
     `email` VARCHAR(100) NOT NULL UNIQUE,
     `phone` VARCHAR(25) NOT NULL,
+    `city` VARCHAR(100) NULL,
     `password` VARCHAR(255) NOT NULL,
     `role` ENUM('superadmin', 'pemilik', 'penyewa') NOT NULL DEFAULT 'penyewa',
     `subscription_status` ENUM('trial', 'active', 'expired') NOT NULL DEFAULT 'trial',

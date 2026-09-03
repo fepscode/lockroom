@@ -76,13 +76,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isPenyewaNotice) {
                     $error = 'Alamat email ini sudah terdaftar! Silakan langsung login.';
                 } else {
                     if ($mode === 'gmail') {
-                        // GMAIL REGISTRATION FOR PEMILIK WITH PASSWORD
+                        // GMAIL REGISTRATION FOR PEMILIK WITH PASSWORD & CITY
                         $name = formatNameFromEmail($email);
                         $phone = '08' . rand(1111111111, 9999999999);
+                        $city = sanitizeInput($_POST['city'] ?? 'Jakarta');
                         $password = $_POST['password'] ?? '';
                         $confirmPassword = $_POST['confirm_password'] ?? '';
                         
-                        if (empty($password)) {
+                        if (empty($city)) {
+                            $error = 'Harap tentukan kota lokasi kos Anda!';
+                        } elseif (empty($password)) {
                             $error = 'Harap tentukan kata sandi akun Anda!';
                         } elseif (strlen($password) < 6) {
                             $error = 'Kata sandi minimal harus 6 karakter!';
@@ -93,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isPenyewaNotice) {
                                 'name' => $name,
                                 'email' => $email,
                                 'phone' => $phone,
+                                'city' => $city,
                                 'password' => password_hash($password, PASSWORD_BCRYPT),
                                 'role' => 'pemilik',
                                 'mode' => 'gmail'
@@ -102,11 +106,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isPenyewaNotice) {
                         // MANUAL MODE FOR PEMILIK
                         $name = sanitizeInput($_POST['name'] ?? '');
                         $phone = sanitizeInput($_POST['phone'] ?? '');
+                        $city = sanitizeInput($_POST['city'] ?? 'Jakarta');
                         $password = $_POST['password'] ?? '';
                         $confirmPassword = $_POST['confirm_password'] ?? '';
 
-                        if (empty($name) || empty($phone) || empty($password)) {
-                            $error = 'Semua kolom formulir wajib diisi!';
+                        if (empty($name) || empty($phone) || empty($city) || empty($password)) {
+                            $error = 'Semua kolom formulir termasuk kota wajib diisi!';
                         } elseif (strlen($password) < 6) {
                             $error = 'Kata sandi minimal harus 6 karakter!';
                         } elseif ($password !== $confirmPassword) {
@@ -120,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isPenyewaNotice) {
                                 'name' => $name,
                                 'email' => $email,
                                 'phone' => $phone,
+                                'city' => $city,
                                 'password' => password_hash($password, PASSWORD_BCRYPT),
                                 'role' => 'pemilik',
                                 'mode' => 'manual'
@@ -150,18 +156,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isPenyewaNotice) {
 
             if ($pdo) {
                 try {
-                    $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, subscription_status, trial_ends_at, subscription_plan) VALUES (?, ?, ?, ?, 'pemilik', 'trial', DATE_ADD(NOW(), INTERVAL 14 DAY), 'Free Trial 14 Hari')");
-                    $stmt->execute([$data['name'], $data['email'], $data['phone'], $data['password']]);
+                    $ownerCity = !empty($data['city']) ? $data['city'] : 'Jakarta';
+                    $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, city, password, role, subscription_status, trial_ends_at, subscription_plan) VALUES (?, ?, ?, ?, ?, 'pemilik', 'trial', DATE_ADD(NOW(), INTERVAL 14 DAY), 'Free Trial 14 Hari')");
+                    $stmt->execute([$data['name'], $data['email'], $data['phone'], $ownerCity, $data['password']]);
                     $newUserId = $pdo->lastInsertId();
 
-                    // Create default property for owner
+                    // Create default property for owner with specified city
                     $propStmt = $pdo->prepare("INSERT INTO properties (owner_id, name, type, address, city, description) VALUES (?, ?, ?, ?, ?, ?)");
                     $propStmt->execute([
                         $newUserId,
                         'Kost ' . $data['name'],
                         'kos_campur',
                         'Alamat Properti Kos Anda',
-                        'Jakarta',
+                        $ownerCity,
                         'Kelola kos dan kontrakan Anda dengan mudah di LOCK & ROOM.'
                     ]);
 
@@ -354,6 +361,16 @@ $currentOTPData = $_SESSION['pending_otp'] ?? null;
                                     </div>
                                 </div>
 
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                                        Kota Lokasi Kos / Properti Anda
+                                    </label>
+                                    <div class="relative">
+                                        <i class="fa-solid fa-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500"></i>
+                                        <input type="text" name="city" list="citiesList" required placeholder="Contoh: Jakarta Selatan, Bandung, Yogyakarta..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl py-2.5 pl-11 pr-4 text-slate-900 dark:text-white text-sm focus:border-indigo-500 focus:outline-none transition-all placeholder:text-slate-400">
+                                    </div>
+                                </div>
+
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
@@ -417,6 +434,14 @@ $currentOTPData = $_SESSION['pending_otp'] ?? null;
                                     </div>
                                 </div>
 
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Kota Lokasi Kos / Properti</label>
+                                    <div class="relative">
+                                        <i class="fa-solid fa-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500"></i>
+                                        <input type="text" name="city" list="citiesList" required placeholder="Contoh: Jakarta Selatan, Surabaya, Bandung..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl py-2.5 pl-11 pr-4 text-slate-900 dark:text-white text-sm focus:border-indigo-500 focus:outline-none">
+                                    </div>
+                                </div>
+
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Kata Sandi</label>
@@ -435,6 +460,31 @@ $currentOTPData = $_SESSION['pending_otp'] ?? null;
                                 </div>
                             </form>
                         <?php endif; ?>
+
+                        <!-- Autocomplete Suggestions for Indonesian Cities -->
+                        <datalist id="citiesList">
+                            <option value="Jakarta Selatan">
+                            <option value="Jakarta Barat">
+                            <option value="Jakarta Pusat">
+                            <option value="Jakarta Timur">
+                            <option value="Jakarta Utara">
+                            <option value="Bandung">
+                            <option value="Yogyakarta">
+                            <option value="Surabaya">
+                            <option value="Semarang">
+                            <option value="Malang">
+                            <option value="Solo (Surakarta)">
+                            <option value="Bogor">
+                            <option value="Depok">
+                            <option value="Tangerang">
+                            <option value="Tangerang Selatan">
+                            <option value="Bekasi">
+                            <option value="Medan">
+                            <option value="Denpasar (Bali)">
+                            <option value="Makassar">
+                            <option value="Palembang">
+                            <option value="Batam">
+                        </datalist>
 
                     <!-- ================= STEP 2: VERIFIKASI KODE OTP ================= -->
                     <?php else: ?>

@@ -7,7 +7,7 @@ $user = currentUser();
 $pdo = getDBConnection();
 
 // Fetch freshest user data
-$stmtUser = $pdo->prepare("SELECT id, name, email, phone, avatar, role FROM users WHERE id = ? LIMIT 1");
+$stmtUser = $pdo->prepare("SELECT id, name, email, phone, city, avatar, role FROM users WHERE id = ? LIMIT 1");
 $stmtUser->execute([$user['id']]);
 $userData = $stmtUser->fetch() ?: $user;
 
@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'update_profile') {
         $name = formatTitleCase(sanitizeInput($_POST['name']));
         $phone = sanitizeInput($_POST['phone']);
+        $city = sanitizeInput($_POST['city'] ?? 'Jakarta');
         $avatarPath = $userData['avatar'] ?? null;
 
         // Handle Avatar Upload
@@ -46,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $avatarPath = null;
         }
 
-        $stmt = $pdo->prepare("UPDATE users SET name = ?, phone = ?, avatar = ? WHERE id = ?");
-        $stmt->execute([$name, $phone, $avatarPath, $user['id']]);
+        $stmt = $pdo->prepare("UPDATE users SET name = ?, phone = ?, city = ?, avatar = ? WHERE id = ?");
+        $stmt->execute([$name, $phone, $city, $avatarPath, $user['id']]);
 
         $_SESSION['user_name'] = $name;
         $_SESSION['user_phone'] = $phone;
@@ -176,6 +177,39 @@ require_once __DIR__ . '/header.php';
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nomor WhatsApp / HP Aktif</label>
                     <input type="tel" name="phone" value="<?= htmlspecialchars($userData['phone'] ?? '') ?>" required placeholder="0812xxxxxxxx" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl py-3 px-3.5 text-slate-900 dark:text-white text-sm focus:border-indigo-500 focus:outline-none transition-colors">
                 </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Kota Lokasi Kos / Domisili</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500"></i>
+                        <input type="text" name="city" list="citiesProfileList" value="<?= htmlspecialchars($userData['city'] ?? 'Jakarta') ?>" required placeholder="Contoh: Jakarta Selatan, Bandung, Surabaya..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl py-3 pl-11 pr-3.5 text-slate-900 dark:text-white text-sm focus:border-indigo-500 focus:outline-none transition-colors">
+                    </div>
+                </div>
+
+                <!-- Datalist for Cities -->
+                <datalist id="citiesProfileList">
+                    <option value="Jakarta Selatan">
+                    <option value="Jakarta Barat">
+                    <option value="Jakarta Pusat">
+                    <option value="Jakarta Timur">
+                    <option value="Jakarta Utara">
+                    <option value="Bandung">
+                    <option value="Yogyakarta">
+                    <option value="Surabaya">
+                    <option value="Semarang">
+                    <option value="Malang">
+                    <option value="Solo (Surakarta)">
+                    <option value="Bogor">
+                    <option value="Depok">
+                    <option value="Tangerang">
+                    <option value="Tangerang Selatan">
+                    <option value="Bekasi">
+                    <option value="Medan">
+                    <option value="Denpasar (Bali)">
+                    <option value="Makassar">
+                    <option value="Palembang">
+                    <option value="Batam">
+                </datalist>
 
                 <button type="submit" class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 mt-4">
                     <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan Profil & Foto

@@ -31,6 +31,12 @@ if ($pdo) {
                                   ORDER BY r.status ASC, r.id ASC LIMIT 9");
         $rooms = $stmtRooms->fetchAll();
 
+        // Fetch distinct cities for search and filter
+        $citiesList = $pdo->query("SELECT DISTINCT city FROM properties WHERE city IS NOT NULL AND TRIM(city) != '' ORDER BY city ASC")->fetchAll(PDO::FETCH_COLUMN);
+        if (empty($citiesList)) {
+            $citiesList = ['Jakarta Selatan', 'Bandung', 'Yogyakarta', 'Surabaya'];
+        }
+
         // Count stats
         $stats['total_rooms'] = $pdo->query("SELECT COUNT(*) FROM rooms")->fetchColumn();
         $stats['available_rooms'] = $pdo->query("SELECT COUNT(*) FROM rooms WHERE status = 'tersedia'")->fetchColumn();
@@ -38,7 +44,10 @@ if ($pdo) {
         $stats['total_tenants'] = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'penyewa'")->fetchColumn();
     } catch (Exception $e) {
         // Table may not be seeded yet
+        $citiesList = ['Jakarta Selatan', 'Bandung', 'Yogyakarta', 'Surabaya'];
     }
+} else {
+    $citiesList = ['Jakarta Selatan', 'Bandung', 'Yogyakarta', 'Surabaya'];
 }
 ?>
 <!DOCTYPE html>
@@ -237,6 +246,25 @@ if ($pdo) {
                         </a>
                     </div>
 
+                    <!-- Search Kos by City Box for Seekers -->
+                    <div class="p-2 sm:p-2.5 bg-white/90 dark:bg-slate-900/90 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl backdrop-blur-xl">
+                        <div class="flex flex-col sm:flex-row items-center gap-2">
+                            <div class="relative flex-1 w-full">
+                                <i class="fa-solid fa-location-dot absolute left-4 top-1/2 -translate-y-1/2 text-rose-500"></i>
+                                <select id="heroCitySelect" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-11 pr-8 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                                    <option value="all">📍 Semua Kota (Cari kos di seluruh wilayah)</option>
+                                    <?php foreach ($citiesList as $c): ?>
+                                        <option value="<?= strtolower(htmlspecialchars($c)) ?>">📍 Kota <?= htmlspecialchars(formatTitleCase($c)) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <button onclick="applyHeroCitySearch()" type="button" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition-all flex-shrink-0">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <span>Cari Kos</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Micro Highlights -->
                     <div class="pt-6 grid grid-cols-3 gap-4 border-t border-slate-200 dark:border-slate-800/80 text-left">
                         <div class="p-3 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -334,7 +362,7 @@ if ($pdo) {
                 <?php if (!empty($properties)): ?>
                     <?php foreach ($properties as $prop): ?>
                         <?php $propPhoto = getPropertyImage($prop['image'] ?? null, $prop['type']); ?>
-                        <div class="glass-card rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm bg-white dark:bg-slate-900 group hover:shadow-xl transition-all">
+                        <div class="property-card-item glass-card rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm bg-white dark:bg-slate-900 group hover:shadow-xl transition-all" data-city="<?= strtolower(htmlspecialchars($prop['city'])) ?>">
                             
                             <!-- Image Banner -->
                             <div class="h-52 relative overflow-hidden bg-slate-200 dark:bg-slate-800">
@@ -417,20 +445,33 @@ if ($pdo) {
                     <p class="text-slate-600 dark:text-slate-400 text-sm mt-2">Pilihan kamar berfasilitas lengkap dengan foto asli dan tarif transparan.</p>
                 </div>
 
-                <!-- Filter Controls -->
-                <div class="flex items-center gap-2">
-                    <button class="room-filter-btn px-4 py-2 rounded-xl text-xs bg-amber-500 text-slate-950 font-bold transition-all" data-filter="all">Semua Kamar</button>
-                    <button class="room-filter-btn px-4 py-2 rounded-xl text-xs bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white border border-slate-200 dark:border-transparent transition-all" data-filter="tersedia">Tersedia Saja</button>
-                    <button class="room-filter-btn px-4 py-2 rounded-xl text-xs bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white border border-slate-200 dark:border-transparent transition-all" data-filter="terisi">Terisi</button>
+                <!-- Filter Controls: Filter Kota & Status Kamar -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="relative min-w-[170px]">
+                        <i class="fa-solid fa-location-dot absolute left-3.5 top-1/2 -translate-y-1/2 text-rose-500 text-xs"></i>
+                        <select id="catalogCityFilter" onchange="filterCatalogByCity(this.value)" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-9 pr-7 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500 shadow-sm cursor-pointer appearance-none">
+                            <option value="all">📍 Semua Kota</option>
+                            <?php foreach ($citiesList as $c): ?>
+                                <option value="<?= strtolower(htmlspecialchars($c)) ?>">📍 <?= htmlspecialchars(formatTitleCase($c)) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[9px] pointer-events-none"></i>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 p-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <button class="room-filter-btn px-3.5 py-1.5 rounded-lg text-xs bg-amber-500 text-slate-950 font-bold transition-all" data-filter="all">Semua Kamar</button>
+                        <button class="room-filter-btn px-3.5 py-1.5 rounded-lg text-xs text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white transition-all" data-filter="tersedia">Tersedia Saja</button>
+                        <button class="room-filter-btn px-3.5 py-1.5 rounded-lg text-xs text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white transition-all" data-filter="terisi">Terisi</button>
+                    </div>
                 </div>
             </div>
 
             <!-- Rooms Grid with Real Photos -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div id="roomsGridContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <?php if (!empty($rooms)): ?>
                     <?php foreach ($rooms as $idx => $room): ?>
                         <?php $roomPhoto = getRoomImage($room['image'] ?? null, $room['room_type'], $idx); ?>
-                        <div class="room-card-item glass-card rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm bg-white dark:bg-slate-900 group hover:shadow-xl transition-all" data-status="<?= htmlspecialchars($room['status']) ?>">
+                        <div class="room-card-item glass-card rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm bg-white dark:bg-slate-900 group hover:shadow-xl transition-all" data-status="<?= htmlspecialchars($room['status']) ?>" data-city="<?= strtolower(htmlspecialchars($room['city'])) ?>">
                             
                             <!-- Card Header Image -->
                             <div class="h-48 relative overflow-hidden bg-slate-200 dark:bg-slate-800">
@@ -447,8 +488,10 @@ if ($pdo) {
                                 </div>
 
                                 <div class="absolute bottom-3 left-4 right-4 z-10 text-white">
-                                    <div class="text-xs text-amber-300 font-bold flex items-center gap-1">
-                                        <i class="fa-solid fa-hotel text-xs"></i> <?= htmlspecialchars(formatTitleCase($room['property_name'])) ?>
+                                    <div class="text-xs text-amber-300 font-bold flex items-center gap-1.5 flex-wrap">
+                                        <span><i class="fa-solid fa-hotel text-xs"></i> <?= htmlspecialchars(formatTitleCase($room['property_name'])) ?></span>
+                                        <span class="text-white/60">•</span>
+                                        <span class="text-rose-300"><i class="fa-solid fa-location-dot text-[11px] text-rose-400"></i> <?= htmlspecialchars(formatTitleCase($room['city'])) ?></span>
                                     </div>
                                     <div class="text-xl font-extrabold font-heading">Kamar <?= htmlspecialchars($room['room_number']) ?></div>
                                 </div>
@@ -509,6 +552,20 @@ if ($pdo) {
                         </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
+
+                <!-- Empty State Alert when No Rooms in Selected City -->
+                <div id="noRoomsAlert" class="hidden col-span-full py-14 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
+                    <div class="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 flex items-center justify-center text-2xl mx-auto mb-4 border border-amber-500/20">
+                        <i class="fa-solid fa-magnifying-glass-location"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white font-heading">Belum Ada Kamar di Kota Ini</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 max-w-sm mx-auto leading-relaxed">
+                        Saat ini belum ada kamar kos yang terdaftar di kota yang Anda pilih. Coba pilih kota lain atau lihat seluruh katalog.
+                    </p>
+                    <button onclick="filterCatalogByCity('all')" type="button" class="mt-4 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-all">
+                        Tampilkan Semua Kota
+                    </button>
+                </div>
             </div>
 
         </div>
@@ -632,6 +689,7 @@ if ($pdo) {
     </button>
 
     <script>
+    // Back to Top Logic
     const backToTopBtn = document.getElementById('backToTopBtn');
     window.addEventListener('scroll', () => {
         if (window.scrollY > 300) {
@@ -649,6 +707,96 @@ if ($pdo) {
             behavior: 'smooth'
         });
     }
+
+    // City & Status Filter Engine for Rooms & Properties
+    let currentCityFilter = 'all';
+    let currentStatusFilter = 'all';
+
+    function filterCatalogByCity(city) {
+        currentCityFilter = (city || 'all').toLowerCase().trim();
+        
+        // Sync both dropdowns if present
+        const heroSelect = document.getElementById('heroCitySelect');
+        const catalogSelect = document.getElementById('catalogCityFilter');
+        if (heroSelect && heroSelect.value !== currentCityFilter) heroSelect.value = currentCityFilter;
+        if (catalogSelect && catalogSelect.value !== currentCityFilter) catalogSelect.value = currentCityFilter;
+
+        // Filter Room Cards
+        const roomCards = document.querySelectorAll('.room-card-item');
+        let visibleRooms = 0;
+        roomCards.forEach(card => {
+            const cardStatus = (card.dataset.status || '').toLowerCase();
+            const cardCity = (card.dataset.city || '').toLowerCase();
+            
+            const matchStatus = (currentStatusFilter === 'all' || cardStatus === currentStatusFilter);
+            const matchCity = (currentCityFilter === 'all' || cardCity.includes(currentCityFilter) || currentCityFilter.includes(cardCity));
+
+            if (matchStatus && matchCity) {
+                card.style.display = '';
+                visibleRooms++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Toggle Empty State for Rooms
+        const noRoomsAlert = document.getElementById('noRoomsAlert');
+        if (noRoomsAlert) {
+            if (visibleRooms === 0) {
+                noRoomsAlert.classList.remove('hidden');
+            } else {
+                noRoomsAlert.classList.add('hidden');
+            }
+        }
+
+        // Filter Property Cards
+        const propCards = document.querySelectorAll('.property-card-item');
+        propCards.forEach(card => {
+            const propCity = (card.dataset.city || '').toLowerCase();
+            const matchCity = (currentCityFilter === 'all' || propCity.includes(currentCityFilter) || currentCityFilter.includes(propCity));
+            if (matchCity) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    function applyHeroCitySearch() {
+        const heroSelect = document.getElementById('heroCitySelect');
+        const selectedCity = heroSelect ? heroSelect.value : 'all';
+        filterCatalogByCity(selectedCity);
+        
+        // Smooth scroll to catalog
+        const targetSection = document.getElementById('kamar') || document.getElementById('rumah-kos');
+        if (targetSection) {
+            targetSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    // Connect Status Buttons with Combined Filter Engine
+    document.addEventListener('DOMContentLoaded', () => {
+        const statusBtns = document.querySelectorAll('.room-filter-btn');
+        statusBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentStatusFilter = (btn.dataset.filter || 'all').toLowerCase();
+                statusBtns.forEach(b => {
+                    b.classList.remove('bg-amber-500', 'text-slate-950', 'font-bold');
+                    b.classList.add('text-slate-700', 'dark:text-slate-300');
+                });
+                btn.classList.add('bg-amber-500', 'text-slate-950', 'font-bold');
+                btn.classList.remove('text-slate-700', 'dark:text-slate-300');
+                filterCatalogByCity(currentCityFilter);
+            });
+        });
+
+        // If URL has ?city= parameter, auto filter
+        const urlParams = new URLSearchParams(window.location.search);
+        const cityParam = urlParams.get('city');
+        if (cityParam) {
+            filterCatalogByCity(cityParam);
+        }
+    });
     </script>
 
     <!-- Frontend Interactive Script -->
