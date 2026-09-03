@@ -21,7 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'submit_payment') {
         $planKey = sanitizeInput($_POST['plan_id'] ?? '');
-        $notes = sanitizeInput($_POST['notes'] ?? '');
 
         if (!isset($plans[$planKey])) {
             setFlash('error', 'Paket langganan tidak valid!');
@@ -30,40 +29,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $amount = $selectedPlan['price'];
             $orderCode = 'SUB-' . date('Ymd') . '-' . rand(1000, 9999);
 
-            $proofPath = null;
-            if (isset($_FILES['proof_image']) && $_FILES['proof_image']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = __DIR__ . '/../assets/uploads/payments/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-                $ext = strtolower(pathinfo($_FILES['proof_image']['name'], PATHINFO_EXTENSION));
-                if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
-                    $filename = 'sub_proof_' . $user['id'] . '_' . time() . '.' . $ext;
-                    $target = $uploadDir . $filename;
-                    if (move_uploaded_file($_FILES['proof_image']['tmp_name'], $target)) {
-                        $proofPath = 'assets/uploads/payments/' . $filename;
-                    }
-                }
-            }
-
             $stmt = $pdo->prepare("INSERT INTO subscription_orders 
-                (owner_id, order_code, plan_name, duration_days, amount, payment_method, proof_image, notes, status) 
-                VALUES (?, ?, ?, ?, ?, 'QRIS GoPay', ?, ?, 'menunggu_konfirmasi')");
+                (owner_id, order_code, plan_name, duration_days, amount, payment_method, notes, status) 
+                VALUES (?, ?, ?, ?, ?, 'QRIS GoPay', 'Konfirmasi bayar via QRIS GoPay Merchant', 'menunggu_konfirmasi')");
             $stmt->execute([
                 $user['id'],
                 $orderCode,
                 $selectedPlan['name'],
                 $selectedPlan['duration_days'],
-                $amount,
-                $proofPath,
-                $notes
+                $amount
             ]);
             $orderId = $pdo->lastInsertId();
 
-            // Trigger notification to Admin
+            // Trigger notification to Super Admin
             notifyAdminNewSubscriptionOrder($orderId);
 
-            setFlash('success', 'Bukti pembayaran berhasil dikirim! Admin telah menerima notifikasi dan akan segera mengaktifkan paket Anda.');
+            setFlash('success', 'Konfirmasi pembayaran berhasil dikirim! Notifikasi telah masuk ke Super Admin untuk persetujuan aktivasi paket Anda.');
             header("Location: subscription.php");
             exit;
         }
@@ -286,24 +267,19 @@ $orders = $stmtOrders->fetchAll();
                 </div>
             </div>
 
-            <!-- Upload Struk Bukti Bayar -->
-            <div>
-                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                    Unggah Bukti Transfer / Screenshot Pembayaran
-                </label>
-                <input type="file" name="proof_image" required accept="image/*" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-700 dark:text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+            <!-- Panduan Pembayaran Mudah -->
+            <div class="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/30 space-y-1.5 text-center">
+                <div class="text-xs font-bold text-slate-800 dark:text-white flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-circle-info text-indigo-600"></i>
+                    <span>Verifikasi Otomatis QRIS GoPay Merchant</span>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Setelah menyelesaikan scan dan transfer pada aplikasi Anda, cukup klik tombol konfirmasi di bawah. Notifikasi akan langsung masuk ke Super Admin.
+                </p>
             </div>
 
-            <!-- Catatan / No HP Pengirim -->
-            <div>
-                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                    Catatan Pembayaran (Opsional)
-                </label>
-                <input type="text" name="notes" placeholder="Misal: Sudah transfer via GoPay a.n. Sulaiman" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl py-2.5 px-3 text-xs text-slate-900 dark:text-white focus:border-indigo-500 focus:outline-none placeholder:text-slate-400">
-            </div>
-
-            <button type="submit" class="w-full py-3.5 px-4 rounded-xl font-bold text-xs text-white shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600">
-                <i class="fa-solid fa-paper-plane"></i> Kirim Bukti &amp; Ajukan Aktivasi
+            <button type="submit" class="w-full py-4 px-4 rounded-2xl font-bold text-sm text-white shadow-xl shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600">
+                <i class="fa-solid fa-circle-check text-base"></i> Saya Sudah Bayar via QRIS
             </button>
         </form>
 

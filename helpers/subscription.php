@@ -164,12 +164,12 @@ function notifyAdminNewSubscriptionOrder($orderId) {
         $order = $stmt->fetch();
 
         if ($order) {
-            // Find admin user(s) or send to owner_id 1 (primary admin)
-            $stmtAdmin = $pdo->query("SELECT id FROM users WHERE role = 'pemilik' ORDER BY id ASC LIMIT 1");
+            // Find Super Admin user
+            $stmtAdmin = $pdo->query("SELECT id FROM users WHERE role = 'superadmin' ORDER BY id ASC LIMIT 1");
             $adminId = $stmtAdmin->fetchColumn() ?: 1;
 
-            $title = "💳 Pembayaran Langganan Masuk (QRIS)";
-            $message = "Pemilik {$order['owner_name']} telah membayar {$order['plan_name']} sebesar " . formatRupiah($order['amount']) . " via QRIS. Klik untuk approve!";
+            $title = "💳 Konfirmasi Pembayaran QRIS GoPay Masuk";
+            $message = "Pemilik {$order['owner_name']} telah membayar {$order['plan_name']} (" . formatRupiah($order['amount']) . ") via QRIS. Klik untuk approve!";
             $url = BASE_URL . '/owner/admin_subscriptions.php';
 
             sendOneSignalPush($adminId, $title, $message, $url, [

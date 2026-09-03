@@ -210,7 +210,9 @@ $currentNmid = getSystemSetting('merchant_nmid', 'ID1020030040050');
                                     <i class="fa-solid fa-image text-indigo-500"></i> Lihat Bukti Bayar
                                 </button>
                             <?php else: ?>
-                                <span class="text-[11px] text-slate-400 italic">Tanpa Bukti Gambar</span>
+                                <span class="px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-500/20 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-qrcode text-emerald-600"></i> Scan QRIS Merchant
+                                </span>
                             <?php endif; ?>
 
                             <?php if ($ord['status'] === 'menunggu_konfirmasi'): ?>
