@@ -77,6 +77,7 @@ if ($pdo) {
                 }
             }
         }
+    </script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4f46e5">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -600,8 +601,14 @@ if ($pdo) {
 
             <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
                 <div>&copy; <?= date('Y') ?> <strong>LOCK & ROOM (L n' R)</strong>. All rights reserved.</div>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4 flex-wrap justify-center">
                     <span class="text-slate-500 dark:text-slate-400"><i class="fa-solid fa-shield-cat text-amber-500 mr-1"></i> Foto Terverifikasi Pemilik</span>
+                    <span class="text-slate-300 dark:text-slate-700 hidden sm:inline">•</span>
+                    <a href="https://fepscode.my.id" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-cyan-400 transition-colors group">
+                        <span>Powered by</span>
+                        <strong class="font-extrabold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-cyan-400 transition-colors">FeCo</strong>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                    </a>
                 </div>
             </div>
         </div>

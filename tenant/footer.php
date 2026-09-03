@@ -2,7 +2,10 @@
 
         <!-- Footer Desktop -->
         <footer class="p-6 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500 hidden md:block">
-            &copy; <?= date('Y') ?> <strong>LOCK & ROOM (L n' R)</strong> — Panel Penghuni Kos & Kontrakan.
+            <div>&copy; <?= date('Y') ?> <strong>LOCK & ROOM (L n' R)</strong> — Panel Penghuni Kos & Kontrakan.</div>
+            <div class="mt-1 text-[11px]">
+                Powered by <a href="https://fepscode.my.id" target="_blank" rel="noopener noreferrer" class="font-extrabold text-emerald-600 dark:text-emerald-400 hover:underline">FeCo</a>
+            </div>
         </footer>
     </div>
 
